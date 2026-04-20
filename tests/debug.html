@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <title>Debug - Visual Portfolio</title>
+  <script type="module">
+    console.log("Debug script loaded!");
+    
+    // Test if the DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log("DOM Content Loaded");
+      const root = document.getElementById('root');
+      if (root) {
+        root.innerHTML = `
+          <div style="padding: 20px; font-family: Arial, sans-serif;">
+            <h1 style="color: #333;">🔧 Frontend Debug Test</h1>
+            <p><strong>Status:</strong> JavaScript is executing successfully!</p>
+            <p><strong>Root element:</strong> Found and accessible</p>
+            <p><strong>Next step:</strong> Testing React app initialization...</p>
+            <div id="test-area" style="background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 8px;">
+              <button onclick="testApiCall()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Test API Call</button>
+              <div id="api-result" style="margin-top: 10px;"></div>
+            </div>
+          </div>
+        `;
+      } else {
+        console.error("Root element not found!");
+      }
+    });
+
+    // Test API connectivity
+    window.testApiCall = async function() {
+      const resultDiv = document.getElementById('api-result');
+      resultDiv.innerHTML = '<p style="color: #666;">Testing API connection...</p>';
+      
+      try {
+        const response = await fetch('/api/health');
+        const data = await response.json();
+        resultDiv.innerHTML = `
+          <p style="color: green;"><strong>✅ API Success!</strong></p>
+          <pre style="background: #e9ecef; padding: 10px; border-radius: 4px; overflow: auto;">${JSON.stringify(data, null, 2)}</pre>
+        `;
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <p style="color: red;"><strong>❌ API Error:</strong></p>
+          <pre style="background: #ffe6e6; padding: 10px; border-radius: 4px;">${error.message}</pre>
+        `;
+      }
+    };
+  </script>
+</head>
+<body>
+  <div id="root">
+    <div style="text-align: center; padding: 50px;">
+      <p>Loading debug test...</p>
+    </div>
+  </div>
+</body>
+</html>
