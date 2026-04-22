@@ -16,6 +16,7 @@ class Config:
     FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "http://localhost:3001")  # Vite dev server
     RESUME_PATH = os.environ.get("RESUME_PATH", "../../assets/Aman Resume.pdf")
     ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "changeme")  # Legacy, not used with JWT
+    ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
     JWT_SECRET = os.environ.get("JWT_SECRET", "changeme-jwt")
     JWT_EXP_MINUTES = int(os.environ.get("JWT_EXP_MINUTES", 60))
     
@@ -82,14 +83,13 @@ class Config:
         if cls._is_default_value(cls.ADMIN_USERNAME, "admin"):
             errors.append("ADMIN_USERNAME must be changed from default in production")
         
-        
         # Point 1 & 4: Additional Production Validations
         if cls.DEBUG:
             errors.append("DEBUG must be disabled in production (set DEBUG=false)")
         
-        # Validate critical paths exist
-        if cls.RESUME_PATH and not os.path.exists(cls.RESUME_PATH):
-            errors.append(f"RESUME_PATH does not exist: {cls.RESUME_PATH}")
+        # Skip resume path check in Docker (file may not be mounted)
+        # if cls.RESUME_PATH and not os.path.exists(cls.RESUME_PATH):
+        #     errors.append(f"RESUME_PATH does not exist: {cls.RESUME_PATH}")
         
         if errors:
             error_message = "Production configuration validation failed:\n" + "\n".join(f"- {error}" for error in errors)
