@@ -9,6 +9,7 @@ class Config:
     # Use absolute path for database in instance folder (convert backslashes to forward slashes for SQLite URI)
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     INSTANCE_DIR = os.path.join(BASE_DIR, 'instance')
+    os.makedirs(INSTANCE_DIR, exist_ok=True)
     DB_PATH = os.path.join(INSTANCE_DIR, 'portfolio.db').replace('\\', '/')
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", f"sqlite:///{DB_PATH}")
     SQLALCHEMY_TRACK_MODIFICATIONS = False

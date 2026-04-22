@@ -22,15 +22,21 @@ import threading
 import time
 
 # Initialize Flask app
+_static_folder = os.path.abspath('../web/dist')
+if not os.path.isdir(_static_folder):
+    _static_folder = os.path.join(os.path.dirname(__file__), 'static')
+    os.makedirs(_static_folder, exist_ok=True)
+
 app = Flask(__name__, 
-            static_folder=os.path.abspath('../web/dist'),
+            static_folder=_static_folder,
             static_url_path='')
 app.config.from_object(Config.init_config())
 
 # Setup CORS (restrict origins in production)
+_cors_origins = [o.strip() for o in Config.CORS_ORIGINS.split(',') if o.strip()]
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["http://localhost:3001", "http://localhost:5000", "http://localhost:3000"],
+        "origins": _cors_origins,
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "supports_credentials": True,
