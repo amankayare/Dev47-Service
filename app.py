@@ -32,6 +32,11 @@ app = Flask(__name__,
             static_url_path='')
 app.config.from_object(Config.init_config())
 
+# ProxyFix: tells Flask it's behind a reverse proxy (Caddy terminates TLS).
+# Without this, Flask generates http:// URLs and browsers block them as mixed content.
+from werkzeug.middleware.proxy_fix import ProxyFix
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
 # Setup CORS (restrict origins in production)
 _cors_origins = [o.strip() for o in Config.CORS_ORIGINS.split(',') if o.strip()]
 CORS(app, resources={

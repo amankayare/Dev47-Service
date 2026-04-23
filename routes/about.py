@@ -25,7 +25,7 @@ def get_about():
     try:
         about = About.query.first()
         if not about:
-            return jsonify({"error": "About info not found"}), 404
+            return jsonify({}), 200
         return jsonify(about.to_dict()), 200
     except Exception as e:
         return jsonify({"errors": str(e)}), 400
