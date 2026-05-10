@@ -123,3 +123,26 @@ class ExperienceSchema(Schema):
 class CommentSchema(Schema):
     content = fields.Str(required=True, validate=validate.Length(min=1, max=2000))
     parent_id = fields.Int(allow_none=True)
+
+
+# --- AI Content Conversion Schema ---
+class ContentConversionSchema(Schema):
+    """
+    Validates the request body for POST /api/blogs/convert.
+    - min=10: ensures there is meaningful content to convert.
+    - max=50_000: prevents token-stuffing / denial-of-service via huge payloads.
+    """
+    raw_text = fields.Str(
+        required=True,
+        validate=validate.Length(min=10, max=50_000),
+        error_messages={
+            "required": "raw_text is required.",
+            "validator_failed": "raw_text must be between 10 and 50,000 characters.",
+        },
+    )
+    # Optional: when provided, overrides the server's default system prompt.
+    custom_system_prompt = fields.Str(
+        load_default=None,
+        allow_none=True,
+        validate=validate.Length(max=10_000),
+    )

@@ -1,4 +1,8 @@
 import os
+from dotenv import load_dotenv
+
+# Load .env into os.environ BEFORE the Config class reads any os.environ.get() calls
+load_dotenv()
 
 class Config:
     # Environment detection
@@ -46,6 +50,10 @@ class Config:
         'max_overflow': int(os.environ.get("DB_MAX_OVERFLOW", 10))
     }
     
+    # AI Configuration
+    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+    GEMINI_MODEL   = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash")
+
     # Performance Settings
     THREADED = os.environ.get("THREADED", "true").lower() == "true"
     DEBUG = os.environ.get("DEBUG", "true" if ENVIRONMENT == "development" else "false").lower() == "true"

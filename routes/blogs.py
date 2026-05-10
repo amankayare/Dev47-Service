@@ -4,8 +4,98 @@ from datetime import datetime
 from sqlalchemy import func
 from utils.security import sanitize_input
 from utils.jwt_auth import jwt_required, admin_required
+from utils.ai_service_factory import create_ai_service
+from schemas import ContentConversionSchema
+from marshmallow import ValidationError
 
 blogs_bp = Blueprint('blogs', __name__)
+
+
+@blogs_bp.route('/convert', methods=['POST'])
+@admin_required
+def convert_content_to_html():
+    """
+    Convert raw text or markdown to structured HTML using AI.
+    ---
+    tags:
+      - Blogs
+    security:
+      - Bearer: []
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required: [raw_text]
+          properties:
+            raw_text:
+              type: string
+              description: Plain text or markdown content (10-50,000 chars)
+    responses:
+      200:
+        description: Converted HTML with AI-suggested title and excerpt
+        schema:
+          type: object
+          properties:
+            html_content:     { type: string }
+            suggested_title:  { type: string }
+            suggested_excerpt: { type: string }
+      400:
+        description: Validation error (input too short/long or missing)
+      503:
+        description: AI service not configured (missing GEMINI_API_KEY)
+      502:
+        description: AI returned an unparseable response
+      500:
+        description: Unexpected AI or network failure
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    # --- Step 1: Validate input with Marshmallow ---
+    schema = ContentConversionSchema()
+    try:
+        data = schema.load(request.get_json(force=True) or {})
+    except ValidationError as err:
+        return jsonify({"errors": err.messages}), 400
+
+    # --- Step 2: Delegate to AI service (Dependency Inversion) ---
+    # The route never imports or instantiates Gemini directly.
+    try:
+        ai_service = create_ai_service()
+        custom_prompt = data.get("custom_system_prompt") or None
+        result = ai_service.convert_to_html(data["raw_text"], system_prompt=custom_prompt)
+    except RuntimeError as exc:
+        # GEMINI_API_KEY not configured
+        logger.error("AI service not configured: %s", exc)
+        return jsonify({"error": str(exc)}), 503
+    except ValueError as exc:
+        # AI returned malformed/unparseable JSON
+        logger.error("AI response parsing error: %s", exc)
+        return jsonify({"error": str(exc)}), 502
+    except Exception as exc:
+        # Network failure, quota exceeded, etc.
+        logger.error("AI conversion unexpected error: %s", exc, exc_info=True)
+        return jsonify({"error": "AI conversion failed. Please try again."}), 500
+
+    # --- Step 3: Return structured result ---
+    return jsonify({
+        "html_content":          result.html_content,
+        "suggested_title":       result.suggested_title,
+        "suggested_excerpt":     result.suggested_excerpt,
+        "reading_time_minutes":  result.reading_time_minutes,
+    }), 200
+
+
+@blogs_bp.route('/convert/default-prompt', methods=['GET'])
+@admin_required
+def get_default_prompt():
+    """Return the current server-side default system prompt so the frontend
+    can pre-populate the optional prompt editor (admin only)."""
+    from utils.gemini_ai_service import _SYSTEM_PROMPT
+    return jsonify({"prompt": _SYSTEM_PROMPT}), 200
+
 
 @blogs_bp.route('/test', methods=['GET'])
 def test_endpoint():
