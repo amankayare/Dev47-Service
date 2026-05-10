@@ -217,7 +217,7 @@ class GeminiAIService(BaseAIService):
             model=model_name,
             google_api_key=api_key,
             temperature=0.3,        # Low temperature → deterministic, structured HTML
-            max_output_tokens=8192,
+            max_output_tokens=16384,
         )
         self._chain: RunnableSequence = self._build_chain()
 
