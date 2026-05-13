@@ -15,6 +15,7 @@ from routes.admin import admin_bp
 from routes.experiences import experiences_bp
 from routes.technical_skills import technical_skills_bp
 from routes.upload import upload_bp
+from routes.polyglot import polyglot_bp
 import logging
 from flasgger import Swagger
 import webbrowser
@@ -106,6 +107,7 @@ app.register_blueprint(admin_bp, url_prefix="/api/admin")
 app.register_blueprint(experiences_bp, url_prefix="/api/experiences")
 app.register_blueprint(technical_skills_bp)
 app.register_blueprint(upload_bp, url_prefix="/api/upload")
+app.register_blueprint(polyglot_bp, url_prefix="/api/polyglot")
 # Blog Category endpoints
 from routes.blog_category import blog_category_bp
 app.register_blueprint(blog_category_bp, url_prefix="/api/blog-categories")
