@@ -13,6 +13,8 @@ class ConversionResult:
     suggested_title: str
     suggested_excerpt: str
     reading_time_minutes: int = 0
+    suggested_quick_links: list = None
+    suggested_tags: list = None
 
 
 class BaseAIService(ABC):

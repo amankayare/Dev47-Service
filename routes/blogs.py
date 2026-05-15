@@ -85,6 +85,8 @@ def convert_content_to_html():
         "suggested_title":       result.suggested_title,
         "suggested_excerpt":     result.suggested_excerpt,
         "reading_time_minutes":  result.reading_time_minutes,
+        "suggested_quick_links": result.suggested_quick_links or [],
+        "suggested_tags":        result.suggested_tags or []
     }), 200
 
 
