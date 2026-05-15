@@ -86,24 +86,18 @@ You MUST ONLY use the following layout patterns:
 🆔 SECTION ID RULES (CRITICAL)
 --------------------------------------------------
 
-EVERY <h2> MUST HAVE A UNIQUE id ATTRIBUTE.
+EVERY heading (<h1>, <h2>, <h3>) MUST HAVE A UNIQUE id ATTRIBUTE.
 
 Format rules:
-- lowercase only
-- words separated by hyphens
-- no spaces, no special characters
-- keep it short but meaningful
-
-Examples:
-"The Illusion of Learning" → id="illusion"
-"Libraries Make Things Easy" → id="libraries"
-"The Real Difficulty: Data, Not Models" → id="data-problem"
+- Use only the FIRST 3 WORDS of the heading text for the id.
+- lowercase only, words separated by hyphens.
+- No special characters (no colons, no dots, no symbols).
+- Example: "S: Single Responsibility Principle" → id="single-responsibility-principle"
 
 ❌ DO NOT:
-- leave any <h2> without id
-- use duplicate ids
-- use long sentence-like ids
-- use camelCase or spaces
+- leave any heading without id
+- use long IDs (keep it to 3 words max)
+- use special characters from the heading in the id
 
 --------------------------------------------------
 🎨 DESIGN INTENT (IMPORTANT)
@@ -179,13 +173,20 @@ Return ONLY a valid JSON object — no markdown fences, no extra text, no HTML o
   "html_content": "<div class=\"blog-content-container\">...</div>",
   "suggested_title": "A catchy, SEO-friendly title (max 70 characters)",
   "suggested_excerpt": "One compelling sentence that summarises the post (max 160 characters)",
-  "reading_time_minutes": 5
+  "reading_time_minutes": 5,
+  "suggested_quick_links": [
+    {{ "title": "Heading Text", "url": "#heading-id" }}
+  ],
+  "suggested_tags": ["react", "webdev", "tutorial"]
 }}
 
 Notes:
+- suggested_quick_links: An array of objects containing 'title' (the EXACT text of the heading) and 'url' (the #id of that heading).
+⚠️ CRITICAL: The ID MUST match the 3-word short ID rule defined above. NO VARIATIONS allowed. Every entry in suggested_quick_links MUST have a corresponding heading tag with the EXACT same short ID.
+- suggested_tags: An array of 1-2 relevant, lowercase technical tags or categories for the post.
 - reading_time_minutes: estimate based on ~200 words per minute for technical readers
-- suggested_title: must be unique, engaging, and NOT start with generic words like 'Understanding' or 'Exploring'
-- suggested_excerpt: must hook the reader in one sentence
+- suggested_title: must be unique, engaging, and NOT start with generic words like 'Understanding' or 'Exploring'. Use PLAIN TEXT only (no HTML entities like &#x27;).
+- suggested_excerpt: must hook the reader in one sentence. Use PLAIN TEXT only (no HTML entities like &#x27;).
 
 DO NOT:
 - Add explanations before or after the JSON
@@ -275,6 +276,7 @@ class GeminiAIService(BaseAIService):
 
         try:
             data = json.loads(cleaned)
+            logger.debug("Parsed AI response: %s", data)
         except json.JSONDecodeError as exc:
             logger.error("Failed to parse AI JSON. Raw output: %s", raw_response[:500])
             raise ValueError(f"AI returned an invalid JSON response: {exc}") from exc
@@ -285,6 +287,8 @@ class GeminiAIService(BaseAIService):
                 suggested_title=data.get("suggested_title", ""),
                 suggested_excerpt=data.get("suggested_excerpt", ""),
                 reading_time_minutes=int(data.get("reading_time_minutes", 0)),
+                suggested_quick_links=data.get("suggested_quick_links") or data.get("quick_links") or [],
+                suggested_tags=data.get("suggested_tags") or data.get("tags") or [],
             )
         except KeyError as exc:
             logger.error("AI JSON missing key: %s. Data: %s", exc, data)
