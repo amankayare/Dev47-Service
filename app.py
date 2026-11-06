@@ -53,6 +53,14 @@ CORS(app, resources={
 # Setup SQLAlchemy
 from models import db
 db.init_app(app)
+from database import create_database_provider
+if Config.DATABASE_BACKEND == "sqlalchemy":
+    with app.app_context():
+        app.extensions["database_provider"] = create_database_provider(
+            Config, sqlalchemy_engine=db.engine
+        )
+else:
+    app.extensions["database_provider"] = create_database_provider(Config)
 
 # Setup Rate Limiting (increased for development)
 #limiter = Limiter(get_remote_address, app=app, default_limits=["1000/minute"])
@@ -185,15 +193,13 @@ def serve_static_files(path):
 def health_check():
     """Health check endpoint for Docker and load balancers"""
     try:
-        # Basic health check - can be extended to check database connectivity
-        from models import db
-        # Simple database query to ensure DB is accessible
-        db.session.execute('SELECT 1')
+        app.extensions["database_provider"].health_check()
         return {
             "status": "healthy",
             "service": "Visual Portfolio API",
             "timestamp": datetime.utcnow().isoformat(),
-            "database": "connected"
+            "database": "connected",
+            "database_backend": Config.DATABASE_BACKEND
         }, 200
     except Exception as e:
         return {

@@ -13,17 +13,17 @@ Flask-based REST API backend with SQLAlchemy and JWT authentication.
 ## Development
 
 ### Prerequisites
-- Python 3.8+
-- pip
+- Python 3.9+
+- [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
 ### Installation
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
 
 ### Development Server
 ```bash
-python app.py
+uv run python app.py
 ```
 
 The API will be available at http://localhost:5000
@@ -39,10 +39,38 @@ Create a `.env` file in this directory:
 
 ```env
 FLASK_ENV=development
+DATABASE_BACKEND=sqlalchemy
 DATABASE_URL=sqlite:///portfolio.db
 JWT_SECRET_KEY=your-super-secret-jwt-key-here
 FRONTEND_ORIGIN=http://localhost:3000
 ```
+
+### Cloudflare D1 HTTP API
+
+The database provider interface can be selected with `DATABASE_BACKEND`:
+
+- `sqlalchemy` (default): uses `DATABASE_URL` and the existing SQLAlchemy models.
+- `cloudflare_d1`: uses Cloudflare's D1 query HTTP API. Configure
+  `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_D1_DATABASE_ID`, and
+  `CLOUDFLARE_API_TOKEN`; optionally set `CLOUDFLARE_D1_TIMEOUT` (seconds).
+  Use a scoped API token with D1 query permissions and keep it out of source
+  control.
+
+The provider is available as `app.extensions["database_provider"]` and
+supports parameterized `execute(sql, params)` calls. D1 uses positional
+parameters (`?` placeholders), for example:
+
+```python
+result = app.extensions["database_provider"].execute(
+    "SELECT id, title FROM projects WHERE id = ?", [project_id]
+)
+```
+
+**Current limitation:** Existing API routes and model-based scripts directly
+use SQLAlchemy ORM sessions. Selecting `cloudflare_d1` configures the D1
+provider and its health check, but does not yet move those existing ORM
+operations to D1. Keep `DATABASE_BACKEND=sqlalchemy` until those data access
+paths are migrated to the provider interface.
 
 ## Project Structure
 
@@ -70,12 +98,13 @@ When running in development mode, Swagger documentation is available at:
 ## Database
 
 ### Development
-- Uses SQLite by default
+- Uses SQLAlchemy with SQLite by default
 - Database file: `portfolio.db`
 
 ### Production
-- Recommended: PostgreSQL
+- SQLAlchemy can use PostgreSQL
 - Set `DATABASE_URL` environment variable
+- Cloudflare D1 is available through the separate HTTP provider described above.
 
 ## Authentication
 
@@ -87,10 +116,10 @@ The API uses JWT tokens for authentication:
 ## Deployment
 
 ### Traditional Hosting
-1. Install dependencies: `pip install -r requirements.txt`
+1. Install dependencies: `uv sync`
 2. Set environment variables
-3. Initialize database: `python init_db.py`
-4. Run with gunicorn: `gunicorn -w 4 -b 0.0.0.0:5000 app:app`
+3. Initialize database: `uv run python init_db.py`
+4. Run with gunicorn: `uv run gunicorn -w 4 -b 0.0.0.0:5000 app:app`
 
 ### Docker
 Use the Dockerfile in the `../docker/` directory.
