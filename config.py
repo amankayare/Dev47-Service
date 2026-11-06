@@ -14,15 +14,24 @@ class Config:
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     INSTANCE_DIR = os.path.join(BASE_DIR, 'instance')
     os.makedirs(INSTANCE_DIR, exist_ok=True)
+    FRONTEND_BUILD_DIR = os.environ.get(
+        "FRONTEND_BUILD_DIR",
+        os.path.abspath(os.path.join(BASE_DIR, "..", "web", "dist")),
+    )
+    SERVE_FRONTEND = os.environ.get("SERVE_FRONTEND", "auto").strip().lower()
     DB_PATH = os.path.join(INSTANCE_DIR, 'portfolio.db').replace('\\', '/')
     DATABASE_BACKEND = os.environ.get("DATABASE_BACKEND", "sqlalchemy").strip().lower()
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", f"sqlite:///{DB_PATH}")
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "DATABASE_URL",
+        "postgresql+psycopg2://portfolio_user:local-development-password@localhost:5432/portfolio",
+    )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     CLOUDFLARE_ACCOUNT_ID = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "")
     CLOUDFLARE_D1_DATABASE_ID = os.environ.get("CLOUDFLARE_D1_DATABASE_ID", "")
     CLOUDFLARE_API_TOKEN = os.environ.get("CLOUDFLARE_API_TOKEN", "")
     CLOUDFLARE_D1_TIMEOUT = int(os.environ.get("CLOUDFLARE_D1_TIMEOUT", 10))
-    FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "http://localhost:3001")  # Vite dev server
+    FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "http://localhost:3000")
+    FRONTEND_URL = os.environ.get("FRONTEND_URL", FRONTEND_ORIGIN)
     RESUME_PATH = os.environ.get("RESUME_PATH", "../../assets/Aman Resume.pdf")
     ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "changeme")  # Legacy, not used with JWT
     ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
@@ -31,7 +40,7 @@ class Config:
     
     # Point 1: Missing Production Settings
     # CORS Configuration - Allow both dev (3001) and prod (5000) origins
-    CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:3001,http://localhost:5000,http://localhost:3000")
+    CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:3000,http://localhost:5000")
     
     # Rate Limiting Configuration
     RATELIMIT_STORAGE_URL = os.environ.get("RATELIMIT_STORAGE_URL", "memory://")

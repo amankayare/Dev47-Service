@@ -38,12 +38,21 @@ python init_db.py
 Create a `.env` file in this directory:
 
 ```env
-FLASK_ENV=development
+ENVIRONMENT=development
 DATABASE_BACKEND=sqlalchemy
-DATABASE_URL=sqlite:///portfolio.db
-JWT_SECRET_KEY=your-super-secret-jwt-key-here
+DATABASE_URL=postgresql+psycopg2://portfolio_user:password@localhost:5432/portfolio
+JWT_SECRET=your-super-secret-jwt-key-here
 FRONTEND_ORIGIN=http://localhost:3000
+FRONTEND_URL=http://localhost:3000
+CORS_ORIGINS=http://localhost:3000
+SERVE_FRONTEND=false
 ```
+
+The backend can run independently from the frontend. Set `VITE_API_BASE_URL`
+in the frontend project to the backend origin/API base when deploying them
+separately. Set `SERVE_FRONTEND=true` only when intentionally serving a built
+frontend from Flask; the default `auto` mode serves it only when a frontend
+build exists at `FRONTEND_BUILD_DIR`.
 
 ### Cloudflare D1 HTTP API
 

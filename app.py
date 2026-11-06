@@ -22,10 +22,20 @@ import webbrowser
 import threading
 import time
 
-# Initialize Flask app
-_static_folder = os.path.abspath('../web/dist')
+# Initialize Flask app. A frontend build is optional so the API can be deployed
+# independently from the frontend project.
+_frontend_build = Config.FRONTEND_BUILD_DIR
+_serve_frontend = (
+    Config.SERVE_FRONTEND == "true"
+    or (
+        Config.SERVE_FRONTEND == "auto"
+        and os.path.isfile(os.path.join(_frontend_build, "index.html"))
+    )
+)
+_static_folder = _frontend_build if _serve_frontend else os.path.join(
+    os.path.dirname(__file__), 'static'
+)
 if not os.path.isdir(_static_folder):
-    _static_folder = os.path.join(os.path.dirname(__file__), 'static')
     os.makedirs(_static_folder, exist_ok=True)
 
 app = Flask(__name__, 
@@ -134,12 +144,16 @@ def health():
 @app.route("/admin/<path:admin_path>")
 def serve_spa_routes(admin_path=None):
     """Serve React app for client-side routing"""
+    if not _serve_frontend:
+        return {"error": "Frontend is hosted separately"}, 404
     return send_from_directory(app.static_folder, 'index.html')
 
 # Serve React frontend static files
 @app.route('/')
 def serve_frontend():
     """Serve the React frontend"""
+    if not _serve_frontend:
+        return {"error": "Frontend is hosted separately"}, 404
     try:
         return send_from_directory(app.static_folder, 'index.html')
     except FileNotFoundError:
@@ -148,6 +162,8 @@ def serve_frontend():
 @app.route('/assets/<path:filename>')
 def serve_assets(filename):
     """Serve static assets with proper MIME types"""
+    if not _serve_frontend:
+        return {"error": "Frontend is hosted separately"}, 404
     try:
         response = send_from_directory(os.path.join(app.static_folder, 'assets'), filename)
         
@@ -178,6 +194,8 @@ def serve_static_files(path):
     # API routes should not be handled here
     if path.startswith('api/'):
         return {"error": "API endpoint not found"}, 404
+    if not _serve_frontend:
+        return {"error": "Not found"}, 404
     
     # Check if it's a static file (has extension)
     if '.' in path:
@@ -215,6 +233,8 @@ def handle_404(e):
     requested_path = request.path
     # If the path looks like an API or static asset, return JSON 404
     if requested_path.startswith('/api/') or '.' in requested_path.split('/')[-1]:
+        return {"error": "Not found"}, 404
+    if not _serve_frontend:
         return {"error": "Not found"}, 404
     # Otherwise, serve the React app
     return send_from_directory(app.static_folder, 'index.html')
