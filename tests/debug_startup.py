@@ -58,7 +58,7 @@ try:
     
 except ImportError as e:
     print(f"\n❌ IMPORT ERROR: {e}")
-    print("Missing dependency. Try: pip install -r requirements.txt")
+    print("Missing dependency. Run: uv sync")
     traceback.print_exc()
     
 except Exception as e:

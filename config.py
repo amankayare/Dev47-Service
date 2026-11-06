@@ -15,8 +15,13 @@ class Config:
     INSTANCE_DIR = os.path.join(BASE_DIR, 'instance')
     os.makedirs(INSTANCE_DIR, exist_ok=True)
     DB_PATH = os.path.join(INSTANCE_DIR, 'portfolio.db').replace('\\', '/')
+    DATABASE_BACKEND = os.environ.get("DATABASE_BACKEND", "sqlalchemy").strip().lower()
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", f"sqlite:///{DB_PATH}")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    CLOUDFLARE_ACCOUNT_ID = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "")
+    CLOUDFLARE_D1_DATABASE_ID = os.environ.get("CLOUDFLARE_D1_DATABASE_ID", "")
+    CLOUDFLARE_API_TOKEN = os.environ.get("CLOUDFLARE_API_TOKEN", "")
+    CLOUDFLARE_D1_TIMEOUT = int(os.environ.get("CLOUDFLARE_D1_TIMEOUT", 10))
     FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "http://localhost:3001")  # Vite dev server
     RESUME_PATH = os.environ.get("RESUME_PATH", "../../assets/Aman Resume.pdf")
     ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "changeme")  # Legacy, not used with JWT
@@ -110,13 +115,15 @@ class Config:
         
         if cls.HEALTH_CHECK_DATABASE:
             try:
-                # Test database connectivity
-                from sqlalchemy import create_engine, text
-                engine = create_engine(cls.SQLALCHEMY_DATABASE_URI, **cls.SQLALCHEMY_ENGINE_OPTIONS)
-                with engine.connect() as conn:
-                    conn.execute(text("SELECT 1"))
-                    conn.close()
-                engine.dispose()
+                if cls.DATABASE_BACKEND == "cloudflare_d1":
+                    from database import create_database_provider
+                    create_database_provider(cls).health_check()
+                else:
+                    from sqlalchemy import create_engine, text
+                    engine = create_engine(cls.SQLALCHEMY_DATABASE_URI, **cls.SQLALCHEMY_ENGINE_OPTIONS)
+                    with engine.connect() as conn:
+                        conn.execute(text("SELECT 1"))
+                    engine.dispose()
             except Exception as e:
                 health_issues.append(f"Database connectivity failed: {str(e)}")
         
@@ -129,6 +136,29 @@ class Config:
             health_issues.append(f"Upload directory issue: {str(e)}")
         
         return health_issues
+
+    @classmethod
+    def validate_database_config(cls):
+        """Validate the selected database provider and its required settings."""
+        if cls.DATABASE_BACKEND not in {"sqlalchemy", "cloudflare_d1"}:
+            raise ValueError(
+                "DATABASE_BACKEND must be either 'sqlalchemy' or 'cloudflare_d1'."
+            )
+        if cls.CLOUDFLARE_D1_TIMEOUT <= 0:
+            raise ValueError("CLOUDFLARE_D1_TIMEOUT must be greater than zero.")
+        if cls.DATABASE_BACKEND == "cloudflare_d1":
+            missing = [
+                name for name, value in (
+                    ("CLOUDFLARE_ACCOUNT_ID", cls.CLOUDFLARE_ACCOUNT_ID),
+                    ("CLOUDFLARE_D1_DATABASE_ID", cls.CLOUDFLARE_D1_DATABASE_ID),
+                    ("CLOUDFLARE_API_TOKEN", cls.CLOUDFLARE_API_TOKEN),
+                )
+                if not value
+            ]
+            if missing:
+                raise ValueError(
+                    "Cloudflare D1 configuration is missing: " + ", ".join(missing)
+                )
     
     @classmethod
     def get_config_summary(cls):
@@ -136,7 +166,13 @@ class Config:
         summary = {
             "environment": cls.ENVIRONMENT,
             "debug_mode": cls.DEBUG,
-            "database_type": "sqlite" if "sqlite" in cls.SQLALCHEMY_DATABASE_URI.lower() else "postgresql",
+            "database_backend": cls.DATABASE_BACKEND,
+            "database_type": (
+                "cloudflare_d1"
+                if cls.DATABASE_BACKEND == "cloudflare_d1"
+                else "sqlite" if "sqlite" in cls.SQLALCHEMY_DATABASE_URI.lower()
+                else "postgresql"
+            ),
             "frontend_origin": cls.FRONTEND_ORIGIN,
             "cors_origins": cls.CORS_ORIGINS,
             "rate_limiting": {
@@ -203,6 +239,7 @@ class Config:
     @classmethod
     def init_config(cls):
         """Initialize and validate configuration. Call this during app startup."""
+        cls.validate_database_config()
         # Validate production configuration
         cls.validate_production_config()
         
