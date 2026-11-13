@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dev47-worker-api",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-07",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "DATABASE_BACKEND": "cloudflare_d1",
+    "POLYGLOT_URL": "https://polyglot.amankayare.com",
+    "FRONTEND_ORIGIN": "http://localhost:3000",
+    "GEMINI_MODEL": "gemini-1.5-flash"
+  },
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "dev-47-dev",
+      "database_id": "40801755-4e55-4c84-a080-83884eec191f",
+      "migrations_dir": "migrations/d1"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

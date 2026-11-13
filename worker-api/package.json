@@ -1,0 +1,49 @@
+{
+  "name": "dev47-worker-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf:typegen": "wrangler types",
+    "db:migrate:sql": "node --env-file=.env scripts/apply-sql-migrations.mjs",
+    "db:export:sqlite": "node scripts/data-migration.mjs export-sqlite",
+    "db:export:d1": "node scripts/data-migration.mjs export-d1-sql",
+    "db:export:postgres": "node --env-file=.env scripts/data-migration.mjs export-postgres",
+    "db:import:sql": "node --env-file=.env scripts/data-migration.mjs import-sql",
+    "db:import:d1:generate": "node scripts/data-migration.mjs generate-d1",
+    "db:verify:sql": "node --env-file=.env scripts/data-migration.mjs verify-sql",
+    "db:compare:snapshots": "node scripts/data-migration.mjs compare-snapshots",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "next": "^16.4.5",
+    "pg": "^8.16.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.16",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.15.30",
+    "@types/pg": "^8.15.5",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.7",
+    "typescript": "^5.9.3",
+    "vitest": "^5.1.0",
+    "wrangler": "^4.24.3"
+  },
+  "overrides": {
+    "glob": "^14.0.4",
+    "minimatch": "^11.0.5"
+  }
+}
