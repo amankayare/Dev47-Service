@@ -1,0 +1,2715 @@
+{
+  "definitions": {
+    "TechnicalSkillInput": {
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "is_visible": {
+          "default": true,
+          "type": "boolean"
+        },
+        "order": {
+          "type": "integer"
+        },
+        "skills": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "type": "object"
+    }
+  },
+  "info": {
+    "description": "API documentation for Aman Kayare's portfolio backend.",
+    "title": "Portfolio Backend API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/about/": {
+      "delete": {
+        "responses": {
+          "204": {
+            "description": "About deleted"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Delete about information",
+        "tags": [
+          "About"
+        ]
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "description": "About info"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Get about information",
+        "tags": [
+          "About"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "bio": {
+                  "description": "Short biography/about text",
+                  "type": "string"
+                },
+                "birthday": {
+                  "description": "Birthday (YYYY-MM-DD)",
+                  "format": "date",
+                  "type": "string"
+                },
+                "cover_image": {
+                  "description": "URL to cover/banner image",
+                  "type": "string"
+                },
+                "email": {
+                  "description": "Email address",
+                  "type": "string"
+                },
+                "headline": {
+                  "description": "Professional headline or title",
+                  "type": "string"
+                },
+                "location": {
+                  "description": "Location",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Full name",
+                  "type": "string"
+                },
+                "phone": {
+                  "description": "Phone number",
+                  "type": "string"
+                },
+                "photo": {
+                  "description": "URL to profile picture",
+                  "type": "string"
+                },
+                "resume_url": {
+                  "description": "URL to resume or CV",
+                  "type": "string"
+                },
+                "social_links": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Social links (e.g. LinkedIn, GitHub)",
+                  "properties": {
+                    "github": {
+                      "description": "GitHub profile URL",
+                      "type": "string"
+                    },
+                    "linkedin": {
+                      "description": "LinkedIn profile URL",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "About created"
+          },
+          "400": {
+            "description": "About already exists or validation error"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Create about information (only one allowed)",
+        "tags": [
+          "About"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "bio": {
+                  "description": "Short biography/about text",
+                  "type": "string"
+                },
+                "birthday": {
+                  "description": "Birthday (YYYY-MM-DD)",
+                  "format": "date",
+                  "type": "string"
+                },
+                "cover_image": {
+                  "description": "URL to cover/banner image",
+                  "type": "string"
+                },
+                "email": {
+                  "description": "Email address",
+                  "type": "string"
+                },
+                "headline": {
+                  "description": "Professional headline or title",
+                  "type": "string"
+                },
+                "location": {
+                  "description": "Location",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Full name",
+                  "type": "string"
+                },
+                "phone": {
+                  "description": "Phone number",
+                  "type": "string"
+                },
+                "photo": {
+                  "description": "URL to profile picture",
+                  "type": "string"
+                },
+                "resume_url": {
+                  "description": "URL to resume or CV",
+                  "type": "string"
+                },
+                "social_links": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Social links (e.g. LinkedIn, GitHub)",
+                  "properties": {
+                    "github": {
+                      "description": "GitHub profile URL",
+                      "type": "string"
+                    },
+                    "linkedin": {
+                      "description": "LinkedIn profile URL",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "About updated"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Update about information",
+        "tags": [
+          "About"
+        ]
+      }
+    },
+    "/api/admin/dashboard": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Dashboard statistics"
+          },
+          "403": {
+            "description": "Admin access required"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Get admin dashboard stats",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "List of all users"
+          },
+          "403": {
+            "description": "Admin access required"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Get all users for admin management",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/admin/users/{user_id}/toggle-admin": {
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User admin status updated"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Toggle admin status for a user",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/auth/change-password": {
+      "put": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "currentPassword": {
+                  "description": "Current password for verification",
+                  "type": "string"
+                },
+                "newPassword": {
+                  "description": "New password",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "currentPassword",
+                "newPassword"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Password changed successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Authentication required or invalid current password"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Change current user's password",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "email": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "email"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reset link sent"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "summary": "Request a password reset link",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "password": {
+                  "description": "Password",
+                  "type": "string"
+                },
+                "username": {
+                  "description": "Username or email",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "username",
+                "password"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Login successful"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        },
+        "summary": "User login",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Current user info"
+          },
+          "401": {
+            "description": "Authentication required"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Get current user info",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/profile": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "User profile information",
+            "schema": {
+              "properties": {
+                "created_at": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "is_admin": {
+                  "type": "boolean"
+                },
+                "last_login": {
+                  "type": "string"
+                },
+                "username": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Get current user's profile",
+        "tags": [
+          "Auth"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "email": {
+                  "format": "email",
+                  "type": "string"
+                },
+                "username": {
+                  "maxLength": 80,
+                  "minLength": 3,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "username",
+                "email"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+            "schema": {
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "user": {
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "409": {
+            "description": "Username or email already exists"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Update current user's profile",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "email": {
+                  "description": "Email address",
+                  "type": "string"
+                },
+                "password": {
+                  "description": "Password",
+                  "type": "string"
+                },
+                "username": {
+                  "description": "Username",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "username",
+                "email",
+                "password"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "User registered successfully"
+          },
+          "400": {
+            "description": "Validation error or user already exists"
+          }
+        },
+        "summary": "User registration",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "new_password": {
+                  "type": "string"
+                },
+                "token": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "token",
+                "new_password"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Password reset successful"
+          },
+          "400": {
+            "description": "Invalid or expired token"
+          }
+        },
+        "summary": "Reset password using token",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/token": {
+      "post": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "JWT token issued"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        },
+        "security": [
+          {
+            "BasicAuth": []
+          }
+        ],
+        "summary": "Get JWT token for admin (requires HTTP Basic Auth)",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/blogs/": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "List of visible blogs"
+          }
+        },
+        "summary": "List all visible blogs",
+        "tags": [
+          "Blogs"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "author": {
+                  "description": "Author object",
+                  "properties": {
+                    "id": {
+                      "description": "Author ID",
+                      "type": "integer"
+                    },
+                    "name": {
+                      "description": "Author name",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "content": {
+                  "description": "Blog content",
+                  "type": "string"
+                },
+                "cover_image": {
+                  "description": "Cover image URL",
+                  "type": "string"
+                },
+                "date": {
+                  "description": "Publication date (YYYY-MM-DD)",
+                  "format": "date",
+                  "type": "string"
+                },
+                "excerpt": {
+                  "description": "Short summary",
+                  "type": "string"
+                },
+                "featured": {
+                  "description": "Featured blog flag",
+                  "type": "boolean"
+                },
+                "reading_time": {
+                  "description": "Estimated reading time (minutes)",
+                  "type": "integer"
+                },
+                "tags": {
+                  "description": "List of tag objects",
+                  "items": {
+                    "properties": {
+                      "id": {
+                        "description": "Tag ID",
+                        "type": "integer"
+                      },
+                      "name": {
+                        "description": "Tag name",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "title": {
+                  "description": "Blog post title",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "content",
+                "date",
+                "tags",
+                "author"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Blog created"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Create a new blog",
+        "tags": [
+          "Blogs"
+        ]
+      }
+    },
+    "/api/blogs/admin": {
+      "get": {
+        "parameters": [
+          {
+            "description": "Page number",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Number of items per page",
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "default": 5,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Search by title, content, summary, or tags",
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by visibility status",
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "visible",
+                "hidden"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of all blogs"
+          },
+          "403": {
+            "description": "Admin access required"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "List all blogs (including hidden ones) - Admin only with search and pagination",
+        "tags": [
+          "Blogs"
+        ]
+      }
+    },
+    "/api/blogs/convert": {
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "raw_text": {
+                  "description": "Plain text or markdown content (10-50,000 chars)",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "raw_text"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Converted HTML with AI-suggested title and excerpt",
+            "schema": {
+              "properties": {
+                "html_content": {
+                  "type": "string"
+                },
+                "suggested_excerpt": {
+                  "type": "string"
+                },
+                "suggested_title": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "400": {
+            "description": "Validation error (input too short/long or missing)"
+          },
+          "500": {
+            "description": "Unexpected AI or network failure"
+          },
+          "502": {
+            "description": "AI returned an unparseable response"
+          },
+          "503": {
+            "description": "AI service not configured (missing GEMINI_API_KEY)"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Convert raw text or markdown to structured HTML using AI.",
+        "tags": [
+          "Blogs"
+        ]
+      }
+    },
+    "/api/blogs/tags/popular": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "popular_tags": {
+                      "items": {
+                        "properties": {
+                          "count": {
+                            "type": "integer"
+                          },
+                          "id": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "percentage": {
+                            "type": "number"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "total_blogs": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "List of popular tags with usage statistics"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "summary": "Get most popular tags based on usage frequency across all visible blogs",
+        "tags": [
+          "Blogs"
+        ]
+      }
+    },
+    "/api/blogs/{blog_id}": {
+      "delete": {
+        "parameters": [
+          {
+            "description": "Blog ID",
+            "in": "path",
+            "name": "blog_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Blog deleted"
+          },
+          "404": {
+            "description": "Blog not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Delete a blog by ID",
+        "tags": [
+          "Blogs"
+        ]
+      },
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "blog_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Blog post details"
+          },
+          "404": {
+            "description": "Blog not found"
+          }
+        },
+        "summary": "Get a single blog post by ID",
+        "tags": [
+          "Blogs"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "description": "Blog ID",
+            "in": "path",
+            "name": "blog_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "author": {
+                  "description": "Author name",
+                  "type": "string"
+                },
+                "content": {
+                  "description": "Blog content",
+                  "type": "string"
+                },
+                "date": {
+                  "description": "Publication date (YYYY-MM-DD)",
+                  "format": "date",
+                  "type": "string"
+                },
+                "tags": {
+                  "description": "List of tags",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "title": {
+                  "description": "Blog post title",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Blog updated"
+          },
+          "404": {
+            "description": "Blog not found"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Update a blog by ID",
+        "tags": [
+          "Blogs"
+        ]
+      }
+    },
+    "/api/blogs/{blog_id}/related": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "blog_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "List of related blog posts"
+          },
+          "404": {
+            "description": "Blog not found"
+          }
+        },
+        "summary": "Get related blogs by shared tags, excluding the current blog, sorted by most recent",
+        "tags": [
+          "Blogs"
+        ]
+      }
+    },
+    "/api/certifications/": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "List of certifications"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "List all certifications",
+        "tags": [
+          "Certifications"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "certificate_id": {
+                  "description": "Certificate ID",
+                  "type": "string"
+                },
+                "credential_url": {
+                  "description": "Credential verification URL",
+                  "type": "string"
+                },
+                "date": {
+                  "description": "Date awarded (YYYY-MM-DD)",
+                  "format": "date",
+                  "type": "string"
+                },
+                "description": {
+                  "description": "Certification description",
+                  "type": "string"
+                },
+                "expiration_date": {
+                  "description": "Expiration date (YYYY-MM-DD)",
+                  "format": "date",
+                  "type": "string"
+                },
+                "issuer": {
+                  "description": "Issuing organization",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Certification name",
+                  "type": "string"
+                },
+                "skills": {
+                  "description": "List of skill objects",
+                  "items": {
+                    "properties": {
+                      "id": {
+                        "description": "Skill ID",
+                        "type": "integer"
+                      },
+                      "name": {
+                        "description": "Skill name",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "name",
+                "issuer",
+                "date",
+                "credential_url"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Certification created"
+          },
+          "400": {
+            "description": "Invalid request"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Create a new certification",
+        "tags": [
+          "Certifications"
+        ]
+      }
+    },
+    "/api/certifications/{cert_id}": {
+      "delete": {
+        "parameters": [
+          {
+            "description": "Certification ID",
+            "in": "path",
+            "name": "cert_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Certification deleted"
+          },
+          "404": {
+            "description": "Certification not found"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Delete a certification by ID",
+        "tags": [
+          "Certifications"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "description": "Certification ID",
+            "in": "path",
+            "name": "cert_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "credential_url": {
+                  "description": "Credential verification URL",
+                  "type": "string"
+                },
+                "date": {
+                  "description": "Date awarded (YYYY-MM-DD)",
+                  "format": "date",
+                  "type": "string"
+                },
+                "issuer": {
+                  "description": "Issuing organization",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Certification name",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Certification updated"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "404": {
+            "description": "Certification not found"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Update a certification by ID",
+        "tags": [
+          "Certifications"
+        ]
+      }
+    },
+    "/api/contact/": {
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "email": {
+                  "description": "Sender's email",
+                  "type": "string"
+                },
+                "message": {
+                  "description": "Message body",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Sender's name",
+                  "type": "string"
+                },
+                "phone": {
+                  "description": "Sender's phone number",
+                  "type": "string"
+                },
+                "preferred_contact_method": {
+                  "description": "Preferred contact method (email/phone/other)",
+                  "type": "string"
+                },
+                "subject": {
+                  "description": "Subject",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "email",
+                "message"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Message sent"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        },
+        "security": [],
+        "summary": "Send a contact message",
+        "tags": [
+          "Contact"
+        ]
+      }
+    },
+    "/api/contact/admin/messages": {
+      "get": {
+        "parameters": [
+          {
+            "description": "Page number",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Number of items per page",
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "default": 10,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Search by name, email, or subject",
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by read status",
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "read",
+                "unread"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of contact messages"
+          },
+          "403": {
+            "description": "Admin access required"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Get all contact messages for admin management (paginated, searchable, filterable, latest first)",
+        "tags": [
+          "Contact"
+        ]
+      }
+    },
+    "/api/contact/admin/messages/mark-all-read": {
+      "put": {
+        "responses": {
+          "200": {
+            "description": "All messages marked as read successfully",
+            "schema": {
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "updated_count": {
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "403": {
+            "description": "Admin access required"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Mark all contact messages as read (Admin only)",
+        "tags": [
+          "Contact"
+        ]
+      }
+    },
+    "/api/contact/admin/messages/{message_id}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Message deleted successfully"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "404": {
+            "description": "Message not found"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Delete a contact message (Admin only)",
+        "tags": [
+          "Contact"
+        ]
+      }
+    },
+    "/api/contact/admin/messages/{message_id}/toggle-read": {
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Message read status toggled successfully",
+            "schema": {
+              "properties": {
+                "is_read": {
+                  "type": "boolean"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "read_at": {
+                  "format": "date-time",
+                  "nullable": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "404": {
+            "description": "Message not found"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Toggle read status of a contact message (Admin only)",
+        "tags": [
+          "Contact"
+        ]
+      }
+    },
+    "/api/experiences/": {
+      "get": {
+        "description": "Retrieve all visible work experiences ordered by date",
+        "responses": {
+          "200": {
+            "description": "List of experiences",
+            "schema": {
+              "items": {
+                "properties": {
+                  "achievements": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "color": {
+                    "type": "string"
+                  },
+                  "company": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "integer"
+                  },
+                  "location": {
+                    "type": "string"
+                  },
+                  "period": {
+                    "type": "string"
+                  },
+                  "responsibilities": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "technologies": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "title": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "summary": "Get all visible work experiences",
+        "tags": [
+          "Experiences"
+        ]
+      },
+      "post": {
+        "description": "Create a new work experience entry (Admin only)",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "experience",
+            "required": true,
+            "schema": {
+              "properties": {
+                "achievements": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "color": {
+                  "type": "string"
+                },
+                "company": {
+                  "type": "string"
+                },
+                "duration": {
+                  "type": "string"
+                },
+                "end_date": {
+                  "format": "date",
+                  "type": "string"
+                },
+                "is_current": {
+                  "type": "boolean"
+                },
+                "is_visible": {
+                  "type": "boolean"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "order": {
+                  "type": "integer"
+                },
+                "responsibilities": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "start_date": {
+                  "format": "date",
+                  "type": "string"
+                },
+                "technologies": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "title": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Experience created successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "summary": "Create a new work experience",
+        "tags": [
+          "Experiences"
+        ]
+      }
+    },
+    "/api/experiences/{experience_id}": {
+      "delete": {
+        "description": "Delete a work experience entry (Admin only)",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "experience_id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Experience deleted successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Experience not found"
+          }
+        },
+        "summary": "Delete experience",
+        "tags": [
+          "Experiences"
+        ]
+      },
+      "get": {
+        "description": "Retrieve a specific work experience by ID",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "experience_id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Experience details"
+          },
+          "404": {
+            "description": "Experience not found"
+          }
+        },
+        "summary": "Get specific experience by ID",
+        "tags": [
+          "Experiences"
+        ]
+      },
+      "put": {
+        "description": "Update a work experience entry (Admin only)",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "experience_id",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "experience",
+            "required": true,
+            "schema": {
+              "properties": {
+                "achievements": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "color": {
+                  "type": "string"
+                },
+                "company": {
+                  "type": "string"
+                },
+                "duration": {
+                  "type": "string"
+                },
+                "end_date": {
+                  "format": "date",
+                  "type": "string"
+                },
+                "is_current": {
+                  "type": "boolean"
+                },
+                "is_visible": {
+                  "type": "boolean"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "order": {
+                  "type": "integer"
+                },
+                "responsibilities": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "start_date": {
+                  "format": "date",
+                  "type": "string"
+                },
+                "technologies": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "title": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Experience updated successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Experience not found"
+          }
+        },
+        "summary": "Update existing experience",
+        "tags": [
+          "Experiences"
+        ]
+      }
+    },
+    "/api/projects/": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "List of visible projects"
+          }
+        },
+        "summary": "List all visible projects",
+        "tags": [
+          "Projects"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "categories": {
+                  "description": "List of category objects",
+                  "items": {
+                    "properties": {
+                      "id": {
+                        "description": "Category ID",
+                        "type": "integer"
+                      },
+                      "name": {
+                        "description": "Category name",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "description": {
+                  "description": "Project description",
+                  "type": "string"
+                },
+                "end_date": {
+                  "description": "End date (YYYY-MM-DD)",
+                  "format": "date",
+                  "type": "string"
+                },
+                "gallery": {
+                  "description": "List of gallery image/video URLs",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "github_url": {
+                  "description": "GitHub repository URL",
+                  "type": "string"
+                },
+                "image": {
+                  "description": "Project image URL",
+                  "type": "string"
+                },
+                "is_visible": {
+                  "description": "Visibility flag",
+                  "type": "boolean"
+                },
+                "links": {
+                  "description": "List of project links (e.g., GitHub, Live Demo)",
+                  "items": {
+                    "properties": {
+                      "name": {
+                        "description": "Link name",
+                        "type": "string"
+                      },
+                      "url": {
+                        "description": "Link URL",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "live_url": {
+                  "description": "Live project URL",
+                  "type": "string"
+                },
+                "order": {
+                  "description": "Display order",
+                  "type": "integer"
+                },
+                "project_type": {
+                  "description": "Project type (e.g., Personal, Client)",
+                  "type": "string"
+                },
+                "role": {
+                  "description": "Your role in the project",
+                  "type": "string"
+                },
+                "start_date": {
+                  "description": "Start date (YYYY-MM-DD)",
+                  "format": "date",
+                  "type": "string"
+                },
+                "team_size": {
+                  "description": "Team size",
+                  "type": "integer"
+                },
+                "tech_stack": {
+                  "description": "List of technologies used",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "title": {
+                  "description": "Project title",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "description",
+                "links",
+                "github_url",
+                "live_url",
+                "order"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Project created"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Create a new project",
+        "tags": [
+          "Projects"
+        ]
+      }
+    },
+    "/api/projects/admin": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "List of all projects"
+          },
+          "403": {
+            "description": "Admin access required"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "List all projects (including hidden ones) - Admin only",
+        "tags": [
+          "Projects"
+        ]
+      }
+    },
+    "/api/projects/featured": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "List of visible featured projects"
+          }
+        },
+        "summary": "List all visible featured projects",
+        "tags": [
+          "Projects"
+        ]
+      }
+    },
+    "/api/projects/{project_id}": {
+      "delete": {
+        "parameters": [
+          {
+            "description": "Project ID",
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Project deleted"
+          },
+          "404": {
+            "description": "Project not found"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Delete a project by ID",
+        "tags": [
+          "Projects"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "description": "Project ID",
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "description": {
+                  "description": "Project description",
+                  "type": "string"
+                },
+                "github_url": {
+                  "description": "GitHub repository URL",
+                  "type": "string"
+                },
+                "live_url": {
+                  "description": "Live project URL",
+                  "type": "string"
+                },
+                "order": {
+                  "description": "Display order",
+                  "type": "integer"
+                },
+                "tech_stack": {
+                  "description": "List of technologies used",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "title": {
+                  "description": "Project title",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "description",
+                "tech_stack",
+                "github_url",
+                "live_url",
+                "order"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project updated"
+          },
+          "404": {
+            "description": "Project not found"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Update a project by ID",
+        "tags": [
+          "Projects"
+        ]
+      }
+    },
+    "/api/resume/": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Resume PDF file"
+          },
+          "302": {
+            "description": "Redirect to external resume URL"
+          },
+          "404": {
+            "description": "Resume not found"
+          }
+        },
+        "summary": "Download resume PDF",
+        "tags": [
+          "Resume"
+        ]
+      }
+    },
+    "/api/resume/debug": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Resume debug information",
+            "schema": {
+              "properties": {
+                "about_exists": {
+                  "type": "boolean"
+                },
+                "file_exists": {
+                  "type": "boolean"
+                },
+                "resume_url": {
+                  "type": "string"
+                },
+                "static_folder": {
+                  "type": "string"
+                },
+                "uploads_dir": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "summary": "Debug resume information",
+        "tags": [
+          "Resume"
+        ]
+      }
+    },
+    "/api/resume/delete/{filename}": {
+      "delete": {
+        "parameters": [
+          {
+            "description": "Resume filename to delete",
+            "in": "path",
+            "name": "filename",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resume deleted successfully",
+            "schema": {
+              "properties": {
+                "message": {
+                  "description": "Success message",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "400": {
+            "description": "Invalid filename",
+            "schema": {
+              "properties": {
+                "error": {
+                  "description": "Error message",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "Resume file not found",
+            "schema": {
+              "properties": {
+                "error": {
+                  "description": "Error message",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "500": {
+            "description": "Delete failed due to server error",
+            "schema": {
+              "properties": {
+                "error": {
+                  "description": "Error message",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Delete uploaded resume file",
+        "tags": [
+          "Resume"
+        ]
+      }
+    },
+    "/api/resume/upload": {
+      "post": {
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "parameters": [
+          {
+            "description": "Resume PDF file (max 10MB)",
+            "in": "formData",
+            "name": "file",
+            "required": true,
+            "type": "file"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resume uploaded successfully",
+            "schema": {
+              "properties": {
+                "filename": {
+                  "description": "Generated filename",
+                  "type": "string"
+                },
+                "message": {
+                  "description": "Success message",
+                  "type": "string"
+                },
+                "url": {
+                  "description": "URL of the uploaded resume",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "400": {
+            "description": "Invalid file, missing file, or invalid file type",
+            "schema": {
+              "properties": {
+                "error": {
+                  "description": "Error message",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "413": {
+            "description": "File too large",
+            "schema": {
+              "properties": {
+                "error": {
+                  "description": "Error message",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "500": {
+            "description": "Upload failed due to server error",
+            "schema": {
+              "properties": {
+                "error": {
+                  "description": "Error message",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Upload resume PDF file",
+        "tags": [
+          "Resume"
+        ]
+      }
+    },
+    "/api/resume/view": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Resume PDF for viewing"
+          },
+          "302": {
+            "description": "Redirect to external resume URL"
+          },
+          "404": {
+            "description": "Resume not found"
+          }
+        },
+        "summary": "View resume PDF online",
+        "tags": [
+          "Resume"
+        ]
+      }
+    },
+    "/api/technical-skills/": {
+      "get": {
+        "description": "Retrieve all technical skill categories with their skills arrays",
+        "responses": {
+          "200": {
+            "description": "List of technical skills retrieved successfully",
+            "schema": {
+              "items": {
+                "properties": {
+                  "color": {
+                    "type": "string"
+                  },
+                  "icon": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "integer"
+                  },
+                  "is_visible": {
+                    "type": "boolean"
+                  },
+                  "order": {
+                    "type": "integer"
+                  },
+                  "skills": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "title": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "summary": "Get all technical skills ordered by order field",
+        "tags": [
+          "Technical Skills"
+        ]
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "Create a new technical skill category (Admin only)",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "technical_skill",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/TechnicalSkillInput"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "201": {
+            "description": "Technical skill created successfully"
+          },
+          "400": {
+            "description": "Invalid input data"
+          },
+          "401": {
+            "description": "Authentication required"
+          }
+        },
+        "summary": "Create a new technical skill category",
+        "tags": [
+          "Technical Skills"
+        ]
+      }
+    },
+    "/api/technical-skills/{skill_id}": {
+      "delete": {
+        "description": "Delete a technical skill category (Admin only)",
+        "parameters": [
+          {
+            "description": "Bearer token for authentication",
+            "in": "header",
+            "name": "Authorization",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Technical skill ID",
+            "in": "path",
+            "name": "skill_id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Technical skill deleted successfully"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Technical skill not found"
+          }
+        },
+        "summary": "Delete a technical skill category",
+        "tags": [
+          "Technical Skills"
+        ]
+      },
+      "put": {
+        "description": "Update an existing technical skill category (Admin only)",
+        "parameters": [
+          {
+            "description": "Bearer token for authentication",
+            "in": "header",
+            "name": "Authorization",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Technical skill ID",
+            "in": "path",
+            "name": "skill_id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Technical skill updated successfully"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Technical skill not found"
+          }
+        },
+        "summary": "Update an existing technical skill category",
+        "tags": [
+          "Technical Skills"
+        ]
+      }
+    },
+    "/api/upload/delete/{filename}": {
+      "delete": {
+        "parameters": [
+          {
+            "description": "Filename to delete",
+            "in": "path",
+            "name": "filename",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File deleted successfully",
+            "schema": {
+              "properties": {
+                "message": {
+                  "description": "Success message",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "400": {
+            "description": "Invalid filename",
+            "schema": {
+              "properties": {
+                "error": {
+                  "description": "Error message",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "schema": {
+              "properties": {
+                "error": {
+                  "description": "Error message",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "500": {
+            "description": "Delete failed due to server error",
+            "schema": {
+              "properties": {
+                "error": {
+                  "description": "Error message",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Delete uploaded file",
+        "tags": [
+          "Upload"
+        ]
+      }
+    },
+    "/api/upload/{upload_type}": {
+      "post": {
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "parameters": [
+          {
+            "description": "Type of upload (profile, cover, project, certificate, resume)",
+            "enum": [
+              "profile",
+              "cover",
+              "project",
+              "certificate",
+              "resume"
+            ],
+            "in": "path",
+            "name": "upload_type",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "File to upload (Images for profile/cover/project/certificate - PNG, JPG, JPEG, GIF, WEBP; Resume - PDF only, max 5MB)",
+            "in": "formData",
+            "name": "file",
+            "required": true,
+            "type": "file"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File uploaded successfully",
+            "schema": {
+              "properties": {
+                "filename": {
+                  "description": "Generated filename",
+                  "type": "string"
+                },
+                "message": {
+                  "description": "Success message",
+                  "type": "string"
+                },
+                "url": {
+                  "description": "URL of the uploaded file",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "400": {
+            "description": "Invalid file, missing file, or invalid upload type",
+            "schema": {
+              "properties": {
+                "error": {
+                  "description": "Error message",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "413": {
+            "description": "File too large",
+            "schema": {
+              "properties": {
+                "error": {
+                  "description": "Error message",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "500": {
+            "description": "Upload failed due to server error",
+            "schema": {
+              "properties": {
+                "error": {
+                  "description": "Error message",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Upload file for different purposes",
+        "tags": [
+          "Upload"
+        ]
+      }
+    }
+  },
+  "securityDefinitions": {
+    "BasicAuth": {
+      "description": "HTTP Basic Authentication for /api/auth/token.",
+      "type": "basic"
+    },
+    "Bearer": {
+      "bearerFormat": "JWT",
+      "description": "Paste only the JWT token value below. The server will prefix it with 'Bearer '.",
+      "in": "header",
+      "name": "Authorization",
+      "type": "apiKey"
+    }
+  },
+  "swagger": "2.0"
+}

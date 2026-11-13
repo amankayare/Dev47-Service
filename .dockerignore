@@ -1,0 +1,17 @@
+.git
+.venv
+**/.venv
+**/.venv-workers
+**/__pycache__
+**/*.py[cod]
+.env
+.env.*
+!.env.example
+instance
+uploads
+scratch
+cloudflare
+tests
+.pytest_cache
+.coverage*
+htmlcov

@@ -4,9 +4,20 @@ from dotenv import load_dotenv
 # Load .env into os.environ BEFORE the Config class reads any os.environ.get() calls
 load_dotenv()
 
+
+def _normalize_environment(value):
+    normalized = value.strip().lower()
+    return {
+        "development": "dev",
+        "stage": "stg",
+        "staging": "stg",
+        "production": "prod",
+    }.get(normalized, normalized)
+
+
 class Config:
     # Environment detection
-    ENVIRONMENT = os.environ.get("ENVIRONMENT", "development")
+    ENVIRONMENT = _normalize_environment(os.environ.get("ENVIRONMENT", "dev"))
     
     # Configuration properties (unchanged for backward compatibility)
     SECRET_KEY = os.environ.get("SECRET_KEY", "your-secret-key")
@@ -23,7 +34,7 @@ class Config:
     DATABASE_BACKEND = os.environ.get("DATABASE_BACKEND", "sqlalchemy").strip().lower()
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DATABASE_URL",
-        "postgresql+psycopg2://portfolio_user:local-development-password@localhost:5432/portfolio",
+        f"sqlite:///{DB_PATH}",
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     CLOUDFLARE_ACCOUNT_ID = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "")
@@ -48,7 +59,7 @@ class Config:
     AUTH_RATE_LIMIT = os.environ.get("AUTH_RATE_LIMIT", "10 per minute")
     
     # Logging Configuration
-    LOG_LEVEL = os.environ.get("LOG_LEVEL", "DEBUG" if ENVIRONMENT == "development" else "INFO")
+    LOG_LEVEL = os.environ.get("LOG_LEVEL", "DEBUG" if ENVIRONMENT == "dev" else "INFO")
     LOG_FILE = os.environ.get("LOG_FILE", None)  # None = console only
     
     # File Upload Configuration
@@ -70,7 +81,7 @@ class Config:
 
     # Performance Settings
     THREADED = os.environ.get("THREADED", "true").lower() == "true"
-    DEBUG = os.environ.get("DEBUG", "true" if ENVIRONMENT == "development" else "false").lower() == "true"
+    DEBUG = os.environ.get("DEBUG", "true" if ENVIRONMENT == "dev" else "false").lower() == "true"
     
     # Point 7: Health Check Configuration
     HEALTH_CHECK_DATABASE = os.environ.get("HEALTH_CHECK_DATABASE", "true").lower() == "true"
@@ -79,7 +90,7 @@ class Config:
     @classmethod
     def is_production(cls):
         """Check if running in production environment"""
-        return cls.ENVIRONMENT.lower() == "production"
+        return cls.ENVIRONMENT == "prod"
     
     @classmethod
     def _is_default_value(cls, actual_value, default_value):
@@ -239,9 +250,6 @@ class Config:
         
         if cls.is_production() and cls.DEBUG:
             report["recommendations"].append("Disable DEBUG mode in production")
-        
-        # if "sqlite" in cls.SQLALCHEMY_DATABASE_URI.lower() and cls.is_production():
-        #     report["recommendations"].append("Consider using PostgreSQL for production database")
         
         return report
     

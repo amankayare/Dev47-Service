@@ -3,6 +3,12 @@
 !.env.example
 .venv/
 venv/
+node_modules/
+.next/
+.open-next/
+.wrangler/
+.dev.vars
+*.tsbuildinfo
 __pycache__/
 *.py[cod]
 *.db
@@ -17,3 +23,7 @@ htmlcov/
 build/
 dist/
 *.egg-info/
+.idea/
+.vscode/
+*.sql
+

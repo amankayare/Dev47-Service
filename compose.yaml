@@ -1,0 +1,74 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: portfolio
+      POSTGRES_USER: portfolio
+      POSTGRES_PASSWORD: local-dev-only
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portfolio -d portfolio"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  db-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment: &backend-environment
+      ENVIRONMENT: dev
+      DATABASE_BACKEND: sqlalchemy
+      DATABASE_URL: postgresql+psycopg2://portfolio:local-dev-only@db:5432/portfolio
+      SECRET_KEY: local-development-secret
+      JWT_SECRET: local-development-jwt-secret
+      ADMIN_USERNAME: admin
+      SERVE_FRONTEND: "false"
+      FRONTEND_ORIGIN: http://localhost:3000
+      FRONTEND_URL: http://localhost:3000
+      CORS_ORIGINS: http://localhost:3000
+      HEALTH_CHECK_DATABASE: "true"
+      LOG_LEVEL: DEBUG
+      UPLOAD_FOLDER: /app/uploads
+    command:
+      - uv
+      - run
+      - --no-sync
+      - python
+      - -c
+      - "from app import app; from models import db; ctx = app.app_context(); ctx.push(); db.create_all(); ctx.pop()"
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment: *backend-environment
+    ports:
+      - "127.0.0.1:${API_PORT:-5000}:5000"
+    volumes:
+      - .:/app
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=5)"
+      interval: 10s
+      timeout: 6s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  postgres-data:

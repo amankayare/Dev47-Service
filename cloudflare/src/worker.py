@@ -1,0 +1,8 @@
+from handler import handle_request
+from workers import Response, WorkerEntrypoint
+
+
+class Default(WorkerEntrypoint):
+    async def fetch(self, request):
+        body, status = handle_request(request.method, request.url)
+        return Response.json(body, status=status)

@@ -18,7 +18,11 @@ dependencies = [
     "PyJWT>=2.8",
     "python-dotenv>=1.0",
     "requests>=2.31.0",
+    "dev47-backend-core",
 ]
 
 [tool.uv]
 package = false
+
+[tool.uv.sources]
+dev47-backend-core = { path = "backend_core" }

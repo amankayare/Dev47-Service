@@ -3,6 +3,7 @@ from flask_cors import CORS
 import os
 from datetime import datetime
 from config import Config
+from backend_core.health import api_health_response
 from routes.contact import contact_bp
 from routes.projects import projects_bp
 from routes.blogs import blogs_bp
@@ -42,6 +43,14 @@ app = Flask(__name__,
             static_folder=_static_folder,
             static_url_path='')
 app.config.from_object(Config.init_config())
+if Config.DATABASE_BACKEND == "cloudflare_d1":
+    from database import create_d1_sqlalchemy_engine_options
+
+    # Keep the ORM while routing its SQLite SQL through D1's HTTP API.
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite://"
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = (
+        create_d1_sqlalchemy_engine_options(Config)
+    )
 
 # ProxyFix: tells Flask it's behind a reverse proxy (Caddy terminates TLS).
 # Without this, Flask generates http:// URLs and browsers block them as mixed content.
@@ -135,7 +144,8 @@ logging.basicConfig(level=logging.INFO)
 
 @app.route("/api/health")
 def health():
-    return {"status": "ok", "message": "Portfolio API is running!"}, 200
+    body, status = api_health_response()
+    return body, status
 
 # Handle SPA routes explicitly
 @app.route("/login")
