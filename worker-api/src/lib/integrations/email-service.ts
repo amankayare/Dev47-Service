@@ -1,3 +1,5 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+
 export interface SendEmailParams {
   to: string;
   subject: string;
@@ -6,8 +8,23 @@ export interface SendEmailParams {
 }
 
 export async function sendEmail(params: SendEmailParams): Promise<boolean> {
-  const emailServiceUrl = process.env.EMAIL_SERVICE_URL;
-  const apiKey = process.env.EMAIL_SERVICE_API_KEY;
+  let emailServiceUrl = process.env.EMAIL_SERVICE_URL;
+  let apiKey = process.env.EMAIL_SERVICE_API_KEY;
+
+  try {
+    const ctx = await getCloudflareContext({ async: true });
+    if (ctx?.env) {
+      const cfEnv = ctx.env as any;
+      if (cfEnv.EMAIL_SERVICE_URL) {
+        emailServiceUrl = cfEnv.EMAIL_SERVICE_URL;
+      }
+      if (cfEnv.EMAIL_SERVICE_API_KEY) {
+        apiKey = cfEnv.EMAIL_SERVICE_API_KEY;
+      }
+    }
+  } catch {
+    // Fall back to process.env if not running inside Cloudflare runtime context
+  }
 
   if (!emailServiceUrl) {
     console.warn("EMAIL_SERVICE_URL not configured. Email not sent.");
@@ -19,13 +36,14 @@ export async function sendEmail(params: SendEmailParams): Promise<boolean> {
     subject: params.subject,
     body: params.body,
     isHtml: params.isHtml ?? true,
+    immediate: true, // Use immediate mode for transactional password resets
   };
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
   if (apiKey) {
-    headers["X-Api-Key"] = apiKey;
+    headers["X-API-Key"] = apiKey;
   }
 
   try {
