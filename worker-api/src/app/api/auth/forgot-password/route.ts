@@ -40,8 +40,9 @@ export async function POST(request: Request): Promise<Response> {
 
     const frontendUrl =
       process.env.FRONTEND_URL ??
-      process.env.FRONTEND_ORIGIN ??
-      "https://amankayare.com";
+      (process.env.FRONTEND_ORIGIN && !process.env.FRONTEND_ORIGIN.includes("localhost")
+        ? process.env.FRONTEND_ORIGIN
+        : "https://amankayare.com");
     const resetLink = `${frontendUrl.replace(/\/+$/, "")}/reset-password/${token}`;
 
     const subject = "Reset Your Password - DEV47";

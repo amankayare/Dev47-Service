@@ -7,7 +7,8 @@
   "vars": {
     "DATABASE_BACKEND": "cloudflare_d1",
     "POLYGLOT_URL": "https://polyglot.amankayare.com",
-    "FRONTEND_ORIGIN": "http://localhost:3000",
+    "FRONTEND_ORIGIN": "https://amankayare.com",
+    "FRONTEND_URL": "https://amankayare.com",
     "GEMINI_MODEL": "gemini-1.5-flash"
   },
   "assets": {
