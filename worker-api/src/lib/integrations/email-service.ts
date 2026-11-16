@@ -10,11 +10,15 @@ export interface SendEmailParams {
 export async function sendEmail(params: SendEmailParams): Promise<boolean> {
   let emailServiceUrl = process.env.EMAIL_SERVICE_URL;
   let apiKey = process.env.EMAIL_SERVICE_API_KEY;
+  let emailServiceBinding: any = null;
 
   try {
     const ctx = await getCloudflareContext({ async: true });
     if (ctx?.env) {
       const cfEnv = ctx.env as any;
+      if (cfEnv.EMAIL_SERVICE) {
+        emailServiceBinding = cfEnv.EMAIL_SERVICE;
+      }
       if (cfEnv.EMAIL_SERVICE_URL) {
         emailServiceUrl = cfEnv.EMAIL_SERVICE_URL;
       }
@@ -24,11 +28,6 @@ export async function sendEmail(params: SendEmailParams): Promise<boolean> {
     }
   } catch {
     // Fall back to process.env if not running inside Cloudflare runtime context
-  }
-
-  if (!emailServiceUrl) {
-    console.warn("EMAIL_SERVICE_URL not configured. Email not sent.");
-    return false;
   }
 
   const payload = {
@@ -50,15 +49,40 @@ export async function sendEmail(params: SendEmailParams): Promise<boolean> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
 
-    const response = await fetch(emailServiceUrl, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-    });
+    let response: Response;
+
+    // Prefer Cloudflare Service Binding if available (avoids cross-worker 1042 fetch restrictions)
+    if (emailServiceBinding && typeof emailServiceBinding.fetch === "function") {
+      console.log("Email Service attempt via Service Binding");
+      response = await emailServiceBinding.fetch("https://email-service-worker/api/email/send", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+    } else {
+      if (!emailServiceUrl) {
+        console.warn("EMAIL_SERVICE_URL not configured. Email not sent.");
+        return false;
+      }
+
+      console.log("Email Service attempt via URL fetch:", { emailServiceUrl, hasKey: Boolean(apiKey) });
+      response = await fetch(emailServiceUrl, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+    }
     clearTimeout(timeout);
 
-    return response.status === 200 || response.status === 202;
+    if (!response.ok && response.status !== 202) {
+      const errorText = await response.text();
+      console.error("Email service response error:", response.status, errorText);
+      return false;
+    }
+
+    return true;
   } catch (error) {
     console.error("Failed to connect to Email Microservice:", error);
     return false;
