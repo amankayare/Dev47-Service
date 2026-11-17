@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { jsonResponse } from "@/lib/http";
 
 export interface JwtPayload {
   sub: string;
@@ -17,12 +18,30 @@ export function isJwtError(result: JwtPayload | JwtError): result is JwtError {
 }
 
 export function getJwtSecret(): string {
+  try {
+    const cloudflareEnv = (globalThis as any)[Symbol.for("__cloudflare-context__")]?.env;
+    if (cloudflareEnv?.JWT_SECRET && typeof cloudflareEnv.JWT_SECRET === "string") {
+      const secret = cloudflareEnv.JWT_SECRET.trim();
+      if (secret) return secret;
+    }
+  } catch {
+    // ignore
+  }
   return (process.env.JWT_SECRET ?? "changeme").trim() || "changeme";
 }
 
 export function getJwtExpMinutes(): number {
-  const parsed = parseInt(process.env.JWT_EXP_MINUTES ?? "60", 10);
-  return Number.isNaN(parsed) || parsed <= 0 ? 60 : parsed;
+  try {
+    const cloudflareEnv = (globalThis as any)[Symbol.for("__cloudflare-context__")]?.env;
+    if (cloudflareEnv?.JWT_EXP_MINUTES) {
+      const parsed = parseInt(String(cloudflareEnv.JWT_EXP_MINUTES), 10);
+      if (!Number.isNaN(parsed) && parsed > 0) return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  const parsed = parseInt(process.env.JWT_EXP_MINUTES ?? "1440", 10);
+  return Number.isNaN(parsed) || parsed <= 0 ? 1440 : parsed;
 }
 
 function base64UrlEncode(input: Buffer | string): string {
@@ -170,9 +189,10 @@ export function authenticateRequest(
   if (!authHeader) {
     return {
       authenticated: false,
-      response: Response.json(
+      response: jsonResponse(
         { error: "no_token", message: "Authorization token required" },
-        { status: 401 },
+        401,
+        request,
       ),
     };
   }
@@ -181,9 +201,10 @@ export function authenticateRequest(
   if (!token) {
     return {
       authenticated: false,
-      response: Response.json(
+      response: jsonResponse(
         { error: "invalid_request", message: "Invalid authentication request" },
-        { status: 401 },
+        401,
+        request,
       ),
     };
   }
@@ -192,7 +213,7 @@ export function authenticateRequest(
   if (isJwtError(decoded)) {
     return {
       authenticated: false,
-      response: Response.json(decoded, { status: 401 }),
+      response: jsonResponse(decoded, 401, request),
     };
   }
 
@@ -216,9 +237,10 @@ export function requireAdmin(
   if (!auth.user.is_admin) {
     return {
       authenticated: false,
-      response: Response.json(
+      response: jsonResponse(
         { error: "admin_required", message: "Admin privileges required" },
-        { status: 403 },
+        403,
+        request,
       ),
     };
   }
