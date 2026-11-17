@@ -1,3 +1,5 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+
 export const DEFAULT_SYSTEM_PROMPT = `You are a senior technical content writer and frontend engineer.
 
 Your task is to transform raw technical content into a polished, production-ready HTML article that feels like a premium engineering blog post.
@@ -327,13 +329,44 @@ export async function convertContentToHtml(
   rawText: string,
   customSystemPrompt?: string | null,
 ): Promise<ConversionResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  let apiKey = process.env.GEMINI_API_KEY;
+  let modelName = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+
+  try {
+    const cloudflareEnv = (globalThis as any)[Symbol.for("__cloudflare-context__")]?.env;
+    if (cloudflareEnv?.GEMINI_API_KEY) {
+      apiKey = cloudflareEnv.GEMINI_API_KEY;
+    }
+    if (cloudflareEnv?.GEMINI_MODEL) {
+      modelName = cloudflareEnv.GEMINI_MODEL;
+    }
+  } catch {
+    // ignore
+  }
+
+  if (!apiKey) {
+    try {
+      const ctx = await getCloudflareContext({ async: true });
+      if (ctx?.env) {
+        const cfEnv = ctx.env as any;
+        if (cfEnv.GEMINI_API_KEY) {
+          apiKey = cfEnv.GEMINI_API_KEY;
+        }
+        if (cfEnv.GEMINI_MODEL) {
+          modelName = cfEnv.GEMINI_MODEL;
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   if (!apiKey) {
     throw new AiConfigurationError("Gemini API key is not configured");
   }
 
   const prompt = customSystemPrompt?.trim() || DEFAULT_SYSTEM_PROMPT;
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
   const payload = {
     systemInstruction: {
