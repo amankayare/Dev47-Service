@@ -5,6 +5,8 @@ export interface NewsletterBannerSettings {
   title: string;
   badge: string;
   description: string;
+  button_text: string;
+  placeholder: string;
 }
 
 export const DEFAULT_NEWSLETTER_BANNER: NewsletterBannerSettings = {
@@ -13,6 +15,8 @@ export const DEFAULT_NEWSLETTER_BANNER: NewsletterBannerSettings = {
   badge: "Newsletter",
   description:
     "Stay ahead of the curve. Get high-signal, zero-noise articles on modern web architecture, advanced UI/UX, and AI integrations delivered straight to your inbox.",
+  button_text: "Subscribe",
+  placeholder: "name@example.com",
 };
 
 export async function getSetting<T>(
@@ -91,6 +95,14 @@ export async function updateNewsletterBannerSettings(
       typeof settings.description === "string" && settings.description.trim()
         ? settings.description.trim()
         : current.description,
+    button_text:
+      typeof settings.button_text === "string" && settings.button_text.trim()
+        ? settings.button_text.trim()
+        : current.button_text || "Subscribe",
+    placeholder:
+      typeof settings.placeholder === "string" && settings.placeholder.trim()
+        ? settings.placeholder.trim()
+        : current.placeholder || "name@example.com",
   };
   await setSetting(db, "newsletter_banner", updated);
   return updated;
