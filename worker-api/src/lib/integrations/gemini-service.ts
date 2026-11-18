@@ -328,23 +328,30 @@ export interface ConversionResult {
 export async function convertContentToHtml(
   rawText: string,
   customSystemPrompt?: string | null,
+  apiKeyOverride?: string,
+  modelOverride?: string,
 ): Promise<ConversionResult> {
-  let apiKey = process.env.GEMINI_API_KEY;
-  let modelName = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+  // Priority 1: explicitly injected key (from route handler which has direct env access)
+  let apiKey: string | undefined = apiKeyOverride;
+  let modelName: string = modelOverride || process.env.GEMINI_MODEL || "gemini-1.5-flash";
 
-  try {
-    const cloudflareEnv = (globalThis as any)[Symbol.for("__cloudflare-context__")]?.env;
-    if (cloudflareEnv?.GEMINI_API_KEY) {
-      apiKey = cloudflareEnv.GEMINI_API_KEY;
+  if (!apiKey) {
+    // Priority 2: globalThis cloudflare context (synchronous)
+    try {
+      const cloudflareEnv = (globalThis as any)[Symbol.for("__cloudflare-context__")]?.env;
+      if (cloudflareEnv?.GEMINI_API_KEY) {
+        apiKey = cloudflareEnv.GEMINI_API_KEY;
+      }
+      if (cloudflareEnv?.GEMINI_MODEL) {
+        modelName = cloudflareEnv.GEMINI_MODEL;
+      }
+    } catch {
+      // ignore
     }
-    if (cloudflareEnv?.GEMINI_MODEL) {
-      modelName = cloudflareEnv.GEMINI_MODEL;
-    }
-  } catch {
-    // ignore
   }
 
   if (!apiKey) {
+    // Priority 3: getCloudflareContext async
     try {
       const ctx = await getCloudflareContext({ async: true });
       if (ctx?.env) {
@@ -359,6 +366,11 @@ export async function convertContentToHtml(
     } catch {
       // ignore
     }
+  }
+
+  // Priority 4: process.env (works for vars, not secrets)
+  if (!apiKey) {
+    apiKey = process.env.GEMINI_API_KEY;
   }
 
   if (!apiKey) {

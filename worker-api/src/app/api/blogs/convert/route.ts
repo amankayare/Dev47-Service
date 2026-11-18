@@ -5,6 +5,7 @@ import {
   AiConfigurationError,
   AiParseError,
 } from "@/lib/integrations/gemini-service";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +60,19 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await convertContentToHtml(rawText, customPrompt);
+    // Inject the API key directly from the route handler where env is reliably accessible
+    let geminiApiKey: string | undefined;
+    let geminiModel: string | undefined;
+    try {
+      const ctx = await getCloudflareContext({ async: true });
+      const cfEnv = ctx?.env as any;
+      geminiApiKey = cfEnv?.GEMINI_API_KEY;
+      geminiModel = cfEnv?.GEMINI_MODEL;
+    } catch {
+      // fallback: gemini-service will try its own resolution chain
+    }
+
+    const result = await convertContentToHtml(rawText, customPrompt, geminiApiKey, geminiModel);
     return jsonResponse(
       {
         html_content: result.html_content,
