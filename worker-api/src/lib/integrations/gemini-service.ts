@@ -377,6 +377,9 @@ export async function convertContentToHtml(
     throw new AiConfigurationError("Gemini API key is not configured");
   }
 
+  apiKey = apiKey.trim();
+  modelName = (modelName || "gemini-1.5-flash").trim();
+
   const prompt = customSystemPrompt?.trim() || DEFAULT_SYSTEM_PROMPT;
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 

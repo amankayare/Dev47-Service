@@ -63,13 +63,28 @@ export async function POST(request: Request) {
     // Inject the API key directly from the route handler where env is reliably accessible
     let geminiApiKey: string | undefined;
     let geminiModel: string | undefined;
+
     try {
-      const ctx = await getCloudflareContext({ async: true });
-      const cfEnv = ctx?.env as any;
-      geminiApiKey = cfEnv?.GEMINI_API_KEY;
-      geminiModel = cfEnv?.GEMINI_MODEL;
+      const cloudflareEnv = (globalThis as any)[Symbol.for("__cloudflare-context__")]?.env;
+      if (cloudflareEnv?.GEMINI_API_KEY) {
+        geminiApiKey = cloudflareEnv.GEMINI_API_KEY;
+      }
+      if (cloudflareEnv?.GEMINI_MODEL) {
+        geminiModel = cloudflareEnv.GEMINI_MODEL;
+      }
     } catch {
-      // fallback: gemini-service will try its own resolution chain
+      // ignore
+    }
+
+    if (!geminiApiKey) {
+      try {
+        const ctx = await getCloudflareContext({ async: true });
+        const cfEnv = ctx?.env as any;
+        geminiApiKey = cfEnv?.GEMINI_API_KEY;
+        geminiModel = cfEnv?.GEMINI_MODEL;
+      } catch {
+        // fallback: gemini-service will try its own resolution chain
+      }
     }
 
     const result = await convertContentToHtml(rawText, customPrompt, geminiApiKey, geminiModel);
@@ -86,22 +101,24 @@ export async function POST(request: Request) {
       request,
     );
   } catch (err) {
+    console.error("AI conversion error:", err);
+    const message = err instanceof Error ? err.message : String(err);
     if (err instanceof AiConfigurationError) {
       return jsonResponse(
-        { error: err.message },
+        { error: message, message },
         503,
         request,
       );
     }
     if (err instanceof AiParseError) {
       return jsonResponse(
-        { error: err.message },
+        { error: message, message },
         502,
         request,
       );
     }
     return jsonResponse(
-      { error: "AI conversion failed. Please try again." },
+      { error: message || "AI conversion failed. Please try again.", message: message || "AI conversion failed. Please try again." },
       500,
       request,
     );
