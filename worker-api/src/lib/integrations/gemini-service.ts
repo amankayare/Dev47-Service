@@ -75,8 +75,14 @@ suggested_tags:
 suggested_quick_links:
 
 * array of 2 to 4 objects with:
-  * title: relevant link title
-  * url: relevant anchor or reference url
+  * title: exact title of a major section or heading in the article
+  * url: anchor hash in kebab-case format, e.g. "#introducing-decision-memory"
+
+CRITICAL FOR QUICK LINKS AND HEADINGS:
+* Every quick link MUST correspond to an actual <h2> or <section> in the html_content.
+* You MUST give that <h2> or <section> the exact matching id attribute!
+  Example: If a quick link has url: "#ai-agents-and-historical-context", then the heading in html_content MUST be:
+  <h2 id="ai-agents-and-historical-context">AI Agents and Historical Context</h2>
 
 html_content:
 
