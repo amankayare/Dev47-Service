@@ -37,26 +37,21 @@ Do not include:
 * text outside JSON
 
 ==================================================
-EXPECTED JSON FIELDS
-====================
+EXPECTED JSON FIELDS (IN EXACT ORDER)
+=====================================
 
-The JSON response must contain these fields:
+The JSON response must contain these fields in this order:
 
-* html_content
 * suggested_title
 * suggested_excerpt
 * reading_time_minutes
-* suggested_quick_links
 * suggested_tags
+* suggested_quick_links
+* html_content
 
 ==================================================
 JSON FIELD REQUIREMENTS
 =======================
-
-html_content:
-
-* must contain the complete HTML article
-* must be a single escaped JSON string
 
 suggested_title:
 
@@ -67,23 +62,28 @@ suggested_title:
 suggested_excerpt:
 
 * compelling summary
-* under 160 characters
+* 120-160 characters describing the core thesis of the article
 
 reading_time_minutes:
 
-* estimated using 200 wpm
-
-suggested_quick_links:
-
-* array of objects
-* each object must contain:
-
-  * title
-  * url
+* estimated using 200 wpm (typically 4-8 minutes)
 
 suggested_tags:
 
-* array of lowercase technical tags
+* array of 3 to 6 lowercase technical tags (e.g. ["ai", "software-engineering", "architecture"])
+
+suggested_quick_links:
+
+* array of 2 to 4 objects with:
+  * title: relevant link title
+  * url: relevant anchor or reference url
+
+html_content:
+
+* must contain the complete, fully-finished HTML article
+* length: comprehensive yet focused (1,200 to 2,000 words)
+* CRITICAL: Always complete the entire article and close all tags properly. Never leave an article cut off or unfinished mid-sentence.
+* Use clean semantic HTML without excessively bloated wrappers.
 
 ==================================================
 STRICT HTML DESIGN SYSTEM
@@ -425,6 +425,20 @@ function parseAiJsonOutput(raw: string): Record<string, unknown> {
     fallbackResult.reading_time_minutes = parseInt(readingMatch[1], 10);
   }
 
+  const tagsMatch = cleaned.match(/"suggested_tags"\s*:\s*\[([\s\S]*?)\]/);
+  if (tagsMatch && tagsMatch[1]) {
+    try {
+      fallbackResult.suggested_tags = JSON.parse(`[${tagsMatch[1]}]`);
+    } catch {}
+  }
+
+  const linksMatch = cleaned.match(/"suggested_quick_links"\s*:\s*\[([\s\S]*?)\]/);
+  if (linksMatch && linksMatch[1]) {
+    try {
+      fallbackResult.suggested_quick_links = JSON.parse(`[${linksMatch[1]}]`);
+    } catch {}
+  }
+
   if (typeof fallbackResult.html_content === "string" && fallbackResult.html_content.trim().length > 0) {
     return fallbackResult;
   }
@@ -507,10 +521,13 @@ export async function convertContentToHtml(
       responseSchema: {
         type: "OBJECT",
         properties: {
-          html_content: { type: "STRING" },
           suggested_title: { type: "STRING" },
           suggested_excerpt: { type: "STRING" },
           reading_time_minutes: { type: "INTEGER" },
+          suggested_tags: {
+            type: "ARRAY",
+            items: { type: "STRING" },
+          },
           suggested_quick_links: {
             type: "ARRAY",
             items: {
@@ -522,12 +539,16 @@ export async function convertContentToHtml(
               required: ["title", "url"],
             },
           },
-          suggested_tags: {
-            type: "ARRAY",
-            items: { type: "STRING" },
-          },
+          html_content: { type: "STRING" },
         },
-        required: ["html_content", "suggested_title", "suggested_excerpt", "reading_time_minutes"],
+        required: [
+          "suggested_title",
+          "suggested_excerpt",
+          "reading_time_minutes",
+          "suggested_tags",
+          "suggested_quick_links",
+          "html_content",
+        ],
       },
     },
   };
