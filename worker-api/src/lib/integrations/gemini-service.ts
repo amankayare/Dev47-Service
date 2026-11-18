@@ -325,6 +325,113 @@ export interface ConversionResult {
   suggested_tags: string[];
 }
 
+/**
+ * Resiliently parses AI JSON output, repairing unescaped newlines/control chars,
+ * truncated strings/brackets, and falling back to regex extraction if needed.
+ */
+function parseAiJsonOutput(raw: string): Record<string, unknown> {
+  const cleaned = raw
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+
+  // 1. Direct standard parse
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    // Continue to repair
+  }
+
+  // 2. Repair unescaped newlines/control characters inside JSON strings and close truncated output
+  try {
+    let inString = false;
+    let escaped = false;
+    let fixed = "";
+
+    for (let i = 0; i < cleaned.length; i++) {
+      const char = cleaned[i];
+      if (escaped) {
+        fixed += char;
+        escaped = false;
+        continue;
+      }
+      if (char === "\\") {
+        fixed += char;
+        escaped = true;
+        continue;
+      }
+      if (char === '"') {
+        inString = !inString;
+        fixed += char;
+        continue;
+      }
+      if (inString) {
+        if (char === "\n") {
+          fixed += "\\n";
+          continue;
+        }
+        if (char === "\r") {
+          fixed += "\\r";
+          continue;
+        }
+        if (char === "\t") {
+          fixed += "\\t";
+          continue;
+        }
+      }
+      fixed += char;
+    }
+
+    // If truncated while inside a string literal, close the string and object
+    if (inString) {
+      fixed += '"';
+    }
+    const trimmed = fixed.trim();
+    if (!trimmed.endsWith("}")) {
+      fixed = trimmed + "}";
+    }
+
+    return JSON.parse(fixed);
+  } catch {
+    // Continue to regex fallback
+  }
+
+  // 3. Regex extraction fallback
+  const fallbackResult: Record<string, unknown> = {};
+
+  const htmlMatch = cleaned.match(
+    /"html_content"\s*:\s*"([\s\S]*?)(?:"\s*,\s*"(?:suggested_|reading_|quick_|tags)|"$|"\s*\}|$)/
+  );
+  if (htmlMatch && htmlMatch[1]) {
+    fallbackResult.html_content = htmlMatch[1]
+      .replace(/\\"/g, '"')
+      .replace(/\\n/g, "\n")
+      .replace(/\\t/g, "\t")
+      .replace(/\\r/g, "");
+  }
+
+  const titleMatch = cleaned.match(/"suggested_title"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/);
+  if (titleMatch && titleMatch[1]) {
+    fallbackResult.suggested_title = titleMatch[1].replace(/\\"/g, '"');
+  }
+
+  const excerptMatch = cleaned.match(/"suggested_excerpt"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/);
+  if (excerptMatch && excerptMatch[1]) {
+    fallbackResult.suggested_excerpt = excerptMatch[1].replace(/\\"/g, '"');
+  }
+
+  const readingMatch = cleaned.match(/"reading_time_minutes"\s*:\s*(\d+)/);
+  if (readingMatch && readingMatch[1]) {
+    fallbackResult.reading_time_minutes = parseInt(readingMatch[1], 10);
+  }
+
+  if (typeof fallbackResult.html_content === "string" && fallbackResult.html_content.trim().length > 0) {
+    return fallbackResult;
+  }
+
+  throw new AiParseError("AI returned an invalid JSON response and could not be parsed.");
+}
+
 export async function convertContentToHtml(
   rawText: string,
   customSystemPrompt?: string | null,
@@ -395,8 +502,33 @@ export async function convertContentToHtml(
     ],
     generationConfig: {
       temperature: 0.3,
-      maxOutputTokens: 16384,
+      maxOutputTokens: 8192,
       responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          html_content: { type: "STRING" },
+          suggested_title: { type: "STRING" },
+          suggested_excerpt: { type: "STRING" },
+          reading_time_minutes: { type: "INTEGER" },
+          suggested_quick_links: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                title: { type: "STRING" },
+                url: { type: "STRING" },
+              },
+              required: ["title", "url"],
+            },
+          },
+          suggested_tags: {
+            type: "ARRAY",
+            items: { type: "STRING" },
+          },
+        },
+        required: ["html_content", "suggested_title", "suggested_excerpt", "reading_time_minutes"],
+      },
     },
   };
 
@@ -482,18 +614,7 @@ export async function convertContentToHtml(
   const rawTextOutput =
     responseData.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 
-  // Strip possible markdown fences
-  const cleaned = rawTextOutput
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/i, "")
-    .trim();
-
-  let parsed: Record<string, unknown>;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch (err) {
-    throw new AiParseError(`AI returned an invalid JSON response: ${String(err)}`);
-  }
+  const parsed = parseAiJsonOutput(rawTextOutput);
 
   if (typeof parsed.html_content !== "string") {
     throw new AiParseError("AI response missing required field: html_content");
