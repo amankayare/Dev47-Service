@@ -333,7 +333,7 @@ export async function convertContentToHtml(
 ): Promise<ConversionResult> {
   // Priority 1: explicitly injected key (from route handler which has direct env access)
   let apiKey: string | undefined = apiKeyOverride;
-  let modelName: string = modelOverride || process.env.GEMINI_MODEL || "gemini-1.5-flash";
+  let modelName: string = modelOverride || process.env.GEMINI_MODEL || "gemini-2.0-flash";
 
   if (!apiKey) {
     // Priority 2: globalThis cloudflare context (synchronous)
@@ -378,7 +378,7 @@ export async function convertContentToHtml(
   }
 
   apiKey = apiKey.trim();
-  modelName = (modelName || "gemini-1.5-flash").trim();
+  modelName = (modelName || "gemini-2.0-flash").trim();
 
   const prompt = customSystemPrompt?.trim() || DEFAULT_SYSTEM_PROMPT;
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
@@ -400,13 +400,71 @@ export async function convertContentToHtml(
     },
   };
 
-  const response = await fetch(endpoint, {
+  let response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
   });
+
+  if (!response.ok && response.status === 404) {
+    // Model not found on current version/name. Query available models to auto-recover.
+    try {
+      const modelsRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
+      );
+      if (modelsRes.ok) {
+        const modelsData = (await modelsRes.json()) as {
+          models?: Array<{
+            name: string;
+            supportedGenerationMethods?: string[];
+          }>;
+        };
+        const available = (modelsData.models || [])
+          .filter((m) => m.supportedGenerationMethods?.includes("generateContent"))
+          .map((m) => m.name.replace(/^models\//, ""));
+
+        // Prefer 2.5-flash, 2.0-flash, 1.5-flash-latest, any flash, then any gemini model
+        const preferred =
+          available.find((m) => m.includes("2.5-flash")) ||
+          available.find((m) => m.includes("2.0-flash")) ||
+          available.find((m) => m.includes("1.5-flash-latest")) ||
+          available.find((m) => m.includes("flash") && !m.includes("exp")) ||
+          available.find((m) => m.includes("flash")) ||
+          available.find((m) => m.includes("gemini-2")) ||
+          available.find((m) => m.includes("gemini-1.5")) ||
+          available.find((m) => m.includes("gemini")) ||
+          available[0];
+
+        if (preferred && preferred !== modelName) {
+          console.warn(`[gemini] Model '${modelName}' returned 404. Auto-switching to available model: '${preferred}'`);
+          const retryEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/${preferred}:generateContent?key=${apiKey}`;
+          response = await fetch(retryEndpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+        }
+
+        if (!response.ok) {
+          const retryError = await response.text();
+          throw new Error(
+            `Gemini model '${modelName}' not found. Available models: [${available.join(
+              ", "
+            )}]. Response: ${retryError}`
+          );
+        }
+      }
+    } catch (fallbackErr: any) {
+      if (fallbackErr?.message?.includes("Available models")) {
+        throw fallbackErr;
+      }
+      // Continue to default error throw below
+    }
+  }
 
   if (!response.ok) {
     const errorText = await response.text();
