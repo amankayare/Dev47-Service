@@ -341,14 +341,15 @@ function parseAiJsonOutput(raw: string): Record<string, unknown> {
     .replace(/\s*```$/i, "")
     .trim();
 
-  // 1. Direct standard parse
+  let err1Msg = "";
   try {
     return JSON.parse(cleaned);
-  } catch {
-    // Continue to repair
+  } catch (e: any) {
+    err1Msg = e.message;
   }
 
   // 2. Repair unescaped newlines/control characters inside JSON strings and close truncated output
+  let err2Msg = "";
   try {
     let inString = false;
     let escaped = false;
@@ -398,8 +399,8 @@ function parseAiJsonOutput(raw: string): Record<string, unknown> {
     }
 
     return JSON.parse(fixed);
-  } catch {
-    // Continue to regex fallback
+  } catch (e: any) {
+    err2Msg = e.message;
   }
 
   // 3. Regex extraction fallback
@@ -449,7 +450,12 @@ function parseAiJsonOutput(raw: string): Record<string, unknown> {
     return fallbackResult;
   }
 
-  throw new AiParseError("AI returned an invalid JSON response and could not be parsed.");
+  throw new AiParseError(
+    `Failed to parse AI JSON (raw len ${raw.length}). Parse1: ${err1Msg}, Parse2: ${err2Msg}. Head: [${raw.slice(
+      0,
+      250
+    )}] ... Tail: [${raw.slice(-250)}]`
+  );
 }
 
 export async function convertContentToHtml(
@@ -638,8 +644,9 @@ export async function convertContentToHtml(
     }>;
   };
 
-  const rawTextOutput =
-    responseData.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  const candidate = responseData.candidates?.[0];
+  const parts = candidate?.content?.parts ?? [];
+  const rawTextOutput = parts.map((p) => p.text ?? "").join("");
 
   const parsed = parseAiJsonOutput(rawTextOutput);
 
