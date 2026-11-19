@@ -78,7 +78,9 @@ export async function DELETE(request: Request, context: RouteContext) {
   }
 
   await deleteBlogCategory(db, categoryId);
-  return new Response(null, {
-    status: 204,
-  });
+  return jsonResponse(
+    { success: true, message: "Category deleted successfully." },
+    200,
+    request,
+  );
 }

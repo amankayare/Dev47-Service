@@ -131,9 +131,11 @@ export async function DELETE(request: Request, context: RouteContext) {
 
   try {
     await deleteBlog(db, blogId);
-    return new Response(null, {
-      status: 204,
-    });
+    return jsonResponse(
+      { success: true, message: "Blog deleted successfully." },
+      200,
+      request,
+    );
   } catch (error) {
     return jsonResponse({ error: "Failed to delete blog" }, 500, request);
   }
