@@ -74,20 +74,22 @@ suggested_tags:
 
 suggested_quick_links:
 
-* array of 2 to 4 objects with:
+* array of 3 to 4 objects with:
   * title: exact title of a major section or heading in the article
   * url: anchor hash in kebab-case format, e.g. "#introducing-decision-memory"
 
 CRITICAL FOR QUICK LINKS AND HEADINGS:
-* Every quick link MUST correspond to an actual <h2> or <section> in the html_content.
+* Suggest between 3 and 4 quick links maximum.
+* Every single quick link in suggested_quick_links MUST have a corresponding <h2> section in the html_content.
 * You MUST give that <h2> or <section> the exact matching id attribute!
-  Example: If a quick link has url: "#ai-agents-and-historical-context", then the heading in html_content MUST be:
-  <h2 id="ai-agents-and-historical-context">AI Agents and Historical Context</h2>
+  Example: If a quick link has url: "#practical-steps-today", then the heading in html_content MUST be:
+  <h2 id="practical-steps-today">Practical Steps for Teams Today</h2>
+* CRITICAL COMPLETION ORDER: You MUST pace generation so that every section listed in suggested_quick_links is fully written from first to last. NEVER truncate, omit, or leave the last section unfinished!
 
 html_content:
 
 * must contain the complete, fully-finished HTML article
-* length: comprehensive yet focused (1,200 to 2,000 words)
+* length: comprehensive yet focused (1,000 to 1,400 words)
 * CRITICAL: Always complete the entire article and close all tags properly. Never leave an article cut off or unfinished mid-sentence.
 * Use clean semantic HTML without excessively bloated wrappers.
 
@@ -231,35 +233,31 @@ Optional additions:
 * one blockquote
 
 ==================================================
-MINIMUM CONTENT REQUIREMENTS
-============================
+CONTENT BUDGET AND COMPLETION REQUIREMENTS
+==================================================
 
-Minimum:
-
-* 1500 words
-* 5 headings
-* 15 paragraphs
-* 2 code blocks
-* 2 info boxes
+Target Budget:
+* 1000 to 1400 words
+* 3 to 4 major headings (strictly 1:1 matching suggested_quick_links)
+* 10 to 15 paragraphs
+* 1 or 2 code blocks
+* 1 info box
 * 1 warning box
-* 1 feature grid
-* 1 accordion
-* one animated-flow-diagram per major section
+* At most 1 lightweight animated architecture diagram in the entire article (keep SVG compact to avoid token exhaustion).
 
 ==================================================
 FLOW DIAGRAM RULES
 ==================
 
-Each major section must contain one SVG/CSS animated architecture diagram.
+At most ONE section may contain a concise SVG/CSS animated architecture diagram.
 
 Requirements:
 
-* pure SVG and CSS only
+* pure SVG and CSS only (compact, lightweight paths)
 * no JavaScript
 * architecture-focused
 * visually understandable
-* animated data movement
-* scoped styles only
+* keep SVG markup concise so that all subsequent sections and the final conclusion fit within the token ceiling
 
 ==================================================
 COMPONENT USAGE RULES
