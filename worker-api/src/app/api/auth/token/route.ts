@@ -57,7 +57,13 @@ export async function POST(request: Request): Promise<Response> {
     const user = await findUserByUsername(db, username);
 
     if (user && checkPasswordHash(user.password_hash, password)) {
-      const token = createJwtToken(user.username, user.id, Boolean(user.is_admin));
+      const token = createJwtToken(
+        user.username,
+        user.id,
+        Boolean(user.is_admin),
+        undefined,
+        typeof user.role === "string" ? user.role : undefined,
+      );
       return jsonResponse({ access_token: token }, 200, request);
     }
 

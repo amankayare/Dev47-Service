@@ -34,7 +34,13 @@ export async function POST(request: Request): Promise<Response> {
 
     if (user && checkPasswordHash(user.password_hash, password)) {
       await updateUserLastLogin(db, user.id);
-      const token = createJwtToken(user.username, user.id, Boolean(user.is_admin));
+      const token = createJwtToken(
+        user.username,
+        user.id,
+        Boolean(user.is_admin),
+        undefined,
+        typeof user.role === "string" ? user.role : undefined,
+      );
 
       // Update in-memory user record's last_login for serialization
       const userWithUpdatedLogin = {
