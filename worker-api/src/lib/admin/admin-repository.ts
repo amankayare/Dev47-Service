@@ -105,8 +105,30 @@ export async function toggleUserAdmin(
   }
 
   const newIsAdmin = !Boolean(user.is_admin);
-  await db.execute("UPDATE users SET is_admin = ? WHERE id = ?", [
+  const newRole = newIsAdmin ? "admin" : "user";
+  await db.execute("UPDATE users SET is_admin = ?, role = ? WHERE id = ?", [
     newIsAdmin ? 1 : 0,
+    newRole,
+    userId,
+  ]);
+
+  return findUserById(db, userId);
+}
+
+export async function assignUserRole(
+  db: DatabaseProvider,
+  userId: number,
+  role: "admin" | "writer" | "user",
+): Promise<UserRecord | null> {
+  const user = await findUserById(db, userId);
+  if (!user) {
+    return null;
+  }
+
+  const isAdmin = role === "admin" ? 1 : 0;
+  await db.execute("UPDATE users SET role = ?, is_admin = ? WHERE id = ?", [
+    role,
+    isAdmin,
     userId,
   ]);
 

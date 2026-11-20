@@ -5,6 +5,8 @@ export interface JwtPayload {
   sub: string;
   user_id: number | null;
   is_admin: boolean;
+  role?: string;
+  is_writer?: boolean;
   exp: number;
 }
 
@@ -69,6 +71,7 @@ export function createJwtToken(
   userId: number | null = null,
   isAdmin = false,
   secretOverride?: string,
+  role?: string,
 ): string {
   const secret = secretOverride ?? getJwtSecret();
   const expMinutes = getJwtExpMinutes();
@@ -79,10 +82,15 @@ export function createJwtToken(
     typ: "JWT",
   };
 
+  const finalRole = role || (isAdmin ? "admin" : "user");
+  const isWriter = finalRole === "writer" || finalRole === "admin" || isAdmin;
+
   const payload: JwtPayload = {
     sub: identity,
     user_id: userId,
     is_admin: Boolean(isAdmin),
+    role: finalRole,
+    is_writer: isWriter,
     exp,
   };
 
@@ -144,6 +152,13 @@ export function decodeJwtToken(
 
     const payloadJson = base64UrlDecode(payloadEncoded).toString("utf-8");
     const payload = JSON.parse(payloadJson) as JwtPayload;
+
+    if (!payload.role) {
+      payload.role = payload.is_admin ? "admin" : "user";
+    }
+    if (payload.is_writer === undefined) {
+      payload.is_writer = Boolean(payload.role === "writer" || payload.role === "admin" || payload.is_admin);
+    }
 
     const now = Math.floor(Date.now() / 1000);
     if (typeof payload.exp === "number" && payload.exp < now) {
@@ -239,6 +254,39 @@ export function requireAdmin(
       authenticated: false,
       response: jsonResponse(
         { error: "admin_required", message: "Admin privileges required" },
+        403,
+        request,
+      ),
+    };
+  }
+
+  return auth;
+}
+
+/**
+ * Enforces writer or admin authorization from JWT claims.
+ */
+export function requireWriterOrAdmin(
+  request: Request,
+  secretOverride?: string,
+): AuthResult {
+  const auth = authenticateRequest(request, secretOverride);
+  if (!auth.authenticated) {
+    return auth;
+  }
+
+  const isWriter = Boolean(
+    auth.user.is_admin ||
+    auth.user.is_writer ||
+    auth.user.role === "writer" ||
+    auth.user.role === "admin"
+  );
+
+  if (!isWriter) {
+    return {
+      authenticated: false,
+      response: jsonResponse(
+        { error: "writer_required", message: "Writer or Admin privileges required to write blogs" },
         403,
         request,
       ),

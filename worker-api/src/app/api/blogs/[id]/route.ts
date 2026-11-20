@@ -1,4 +1,4 @@
-import { requireAdmin, authenticateRequest } from "@/lib/auth/jwt";
+import { requireAdmin, requireWriterOrAdmin, authenticateRequest } from "@/lib/auth/jwt";
 import { getDatabaseProvider } from "@/lib/database";
 import { handleOptions, jsonResponse } from "@/lib/http";
 import {
@@ -35,7 +35,7 @@ export async function GET(request: Request, context: RouteContext) {
 }
 
 export async function PUT(request: Request, context: RouteContext) {
-  const auth = requireAdmin(request);
+  const auth = requireWriterOrAdmin(request);
   if (!auth.authenticated) {
     return auth.response;
   }

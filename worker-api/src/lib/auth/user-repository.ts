@@ -6,6 +6,7 @@ export interface UserRecord extends Record<string, unknown> {
   email: string;
   password_hash: string;
   is_admin: boolean | number;
+  role?: string | null;
   created_at: string | Date | null;
   last_login: string | Date | null;
   reset_password_token: string | null;
@@ -17,6 +18,8 @@ export interface UserDto {
   username: string;
   email: string;
   is_admin: boolean;
+  role: string;
+  is_writer: boolean;
   created_at: string | null;
   last_login: string | null;
 }
@@ -48,11 +51,18 @@ export function formatIsoDate(value: unknown): string | null {
 }
 
 export function formatUserDto(user: UserRecord): UserDto {
+  const isAdmin = Boolean(user.is_admin);
+  const rawRole = typeof user.role === "string" ? user.role.trim().toLowerCase() : "";
+  const role = rawRole || (isAdmin ? "admin" : "user");
+  const isWriter = role === "writer" || role === "admin" || isAdmin;
+
   return {
     id: user.id,
     username: user.username,
     email: user.email,
-    is_admin: Boolean(user.is_admin),
+    is_admin: isAdmin,
+    role,
+    is_writer: isWriter,
     created_at: formatIsoDate(user.created_at),
     last_login: formatIsoDate(user.last_login),
   };
@@ -63,7 +73,7 @@ export async function findUserById(
   id: number,
 ): Promise<UserRecord | null> {
   const rows = await db.query<UserRecord>(
-    "SELECT id, username, email, password_hash, is_admin, created_at, last_login, reset_password_token, reset_password_expires FROM users WHERE id = ? LIMIT 1",
+    "SELECT id, username, email, password_hash, is_admin, role, created_at, last_login, reset_password_token, reset_password_expires FROM users WHERE id = ? LIMIT 1",
     [id],
   );
   return rows[0] ?? null;
@@ -74,7 +84,7 @@ export async function findUserByUsername(
   username: string,
 ): Promise<UserRecord | null> {
   const rows = await db.query<UserRecord>(
-    "SELECT id, username, email, password_hash, is_admin, created_at, last_login, reset_password_token, reset_password_expires FROM users WHERE username = ? LIMIT 1",
+    "SELECT id, username, email, password_hash, is_admin, role, created_at, last_login, reset_password_token, reset_password_expires FROM users WHERE username = ? LIMIT 1",
     [username],
   );
   return rows[0] ?? null;
@@ -85,7 +95,7 @@ export async function findUserByEmail(
   email: string,
 ): Promise<UserRecord | null> {
   const rows = await db.query<UserRecord>(
-    "SELECT id, username, email, password_hash, is_admin, created_at, last_login, reset_password_token, reset_password_expires FROM users WHERE email = ? LIMIT 1",
+    "SELECT id, username, email, password_hash, is_admin, role, created_at, last_login, reset_password_token, reset_password_expires FROM users WHERE email = ? LIMIT 1",
     [email],
   );
   return rows[0] ?? null;
@@ -96,7 +106,7 @@ export async function findUserByUsernameOrEmail(
   identifier: string,
 ): Promise<UserRecord | null> {
   const rows = await db.query<UserRecord>(
-    "SELECT id, username, email, password_hash, is_admin, created_at, last_login, reset_password_token, reset_password_expires FROM users WHERE username = ? OR email = ? LIMIT 1",
+    "SELECT id, username, email, password_hash, is_admin, role, created_at, last_login, reset_password_token, reset_password_expires FROM users WHERE username = ? OR email = ? LIMIT 1",
     [identifier, identifier],
   );
   return rows[0] ?? null;
@@ -107,7 +117,7 @@ export async function findUserByResetToken(
   token: string,
 ): Promise<UserRecord | null> {
   const rows = await db.query<UserRecord>(
-    "SELECT id, username, email, password_hash, is_admin, created_at, last_login, reset_password_token, reset_password_expires FROM users WHERE reset_password_token = ? LIMIT 1",
+    "SELECT id, username, email, password_hash, is_admin, role, created_at, last_login, reset_password_token, reset_password_expires FROM users WHERE reset_password_token = ? LIMIT 1",
     [token],
   );
   return rows[0] ?? null;
@@ -120,15 +130,18 @@ export async function createUser(
     email: string;
     passwordHash: string;
     isAdmin?: boolean;
+    role?: string;
   },
 ): Promise<UserRecord> {
+  const role = params.role || (params.isAdmin ? "admin" : "user");
   await db.execute(
-    "INSERT INTO users (username, email, password_hash, is_admin, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)",
+    "INSERT INTO users (username, email, password_hash, is_admin, role, created_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)",
     [
       params.username,
       params.email,
       params.passwordHash,
       params.isAdmin ? 1 : 0,
+      role,
     ],
   );
 
@@ -199,4 +212,17 @@ export async function clearUserResetTokenAndUpdatePassword(
     "UPDATE users SET password_hash = ?, reset_password_token = NULL, reset_password_expires = NULL WHERE id = ?",
     [newPasswordHash, id],
   );
+}
+
+export async function updateUserRole(
+  db: DatabaseProvider,
+  id: number,
+  role: "admin" | "writer" | "user",
+): Promise<UserRecord | null> {
+  const isAdmin = role === "admin" ? 1 : 0;
+  await db.execute(
+    "UPDATE users SET role = ?, is_admin = ? WHERE id = ?",
+    [role, isAdmin, id],
+  );
+  return findUserById(db, id);
 }
