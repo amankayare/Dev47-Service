@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/jwt";
+import { requireWriterOrAdmin } from "@/lib/auth/jwt";
 import { getDatabaseProvider } from "@/lib/database";
 import { handleOptions, jsonResponse } from "@/lib/http";
 import { listBlogsAdmin } from "@/lib/blogs/blog-repository";
@@ -10,7 +10,7 @@ export async function OPTIONS(request: Request) {
 }
 
 export async function GET(request: Request) {
-  const auth = requireAdmin(request);
+  const auth = requireWriterOrAdmin(request);
   if (!auth.authenticated) {
     return auth.response;
   }
@@ -21,6 +21,10 @@ export async function GET(request: Request) {
   const search = url.searchParams.get("search") ?? "";
   const status = url.searchParams.get("status") ?? "all";
 
+  // Admin sees all blogs; writers only see their own blogs
+  const isAdmin = Boolean(auth.user.is_admin || auth.user.role === "admin");
+  const userId = isAdmin ? undefined : (auth.user.user_id ?? undefined);
+
   const db = await getDatabaseProvider();
   try {
     const result = await listBlogsAdmin(db, {
@@ -28,6 +32,7 @@ export async function GET(request: Request) {
       pageSize,
       search,
       status,
+      userId,
     });
     return jsonResponse(result, 200, request);
   } catch (error) {

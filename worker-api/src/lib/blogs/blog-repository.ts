@@ -16,6 +16,7 @@ export interface BlogRecord extends Record<string, unknown> {
   quick_links: string | Array<{ title: string; url: string }> | null;
   category_id: number;
   author_id: number | null;
+  user_id?: number | null;
 }
 
 export interface TagRecord extends Record<string, unknown> {
@@ -43,6 +44,7 @@ export interface BlogDto {
   category_id: number;
   category: { id: number; name: string } | null;
   author_id: number | null;
+  user_id: number | null;
   author: { id: number; name: string; email: string | null } | null;
   tags: Array<{ id: number; name: string }>;
 }
@@ -60,6 +62,7 @@ export interface CreateBlogInput {
   category_id: number;
   author: { id?: number; name: string };
   tags?: Array<string | { id?: number; name?: string }>;
+  user_id?: number | null;
 }
 
 export interface UpdateBlogInput {
@@ -266,6 +269,7 @@ export async function hydrateBlogs(
     category_id: row.category_id,
     category: categoryMap.get(row.category_id) ?? null,
     author_id: row.author_id ?? null,
+    user_id: row.user_id !== null && row.user_id !== undefined ? Number(row.user_id) : null,
     author: row.author_id ? authorMap.get(row.author_id) ?? null : null,
     tags: blogTagsMap.get(row.id) ?? [],
   }));
@@ -410,6 +414,7 @@ export async function listBlogsAdmin(
     pageSize?: number;
     search?: string;
     status?: string;
+    userId?: number;
   },
 ): Promise<{
   blogs: BlogDto[];
@@ -429,10 +434,19 @@ export async function listBlogsAdmin(
   const search = options.search?.trim() ?? "";
   const status = (options.status?.trim().toLowerCase() ?? "all");
 
+  const baseWhere = options.userId ? " WHERE user_id = ?" : "";
+  const baseParams: SqlValue[] = options.userId ? [options.userId] : [];
+
   const [allCountRow, visibleCountRow, hiddenCountRow] = await Promise.all([
-    db.query<{ count: number }>("SELECT COUNT(*) AS count FROM blogs"),
-    db.query<{ count: number }>("SELECT COUNT(*) AS count FROM blogs WHERE is_visible = 1"),
-    db.query<{ count: number }>("SELECT COUNT(*) AS count FROM blogs WHERE is_visible = 0"),
+    db.query<{ count: number }>(`SELECT COUNT(*) AS count FROM blogs${baseWhere}`, baseParams),
+    db.query<{ count: number }>(
+      `SELECT COUNT(*) AS count FROM blogs WHERE is_visible = 1${options.userId ? " AND user_id = ?" : ""}`,
+      baseParams,
+    ),
+    db.query<{ count: number }>(
+      `SELECT COUNT(*) AS count FROM blogs WHERE is_visible = 0${options.userId ? " AND user_id = ?" : ""}`,
+      baseParams,
+    ),
   ]);
 
   const counts = {
@@ -443,6 +457,11 @@ export async function listBlogsAdmin(
 
   const whereClauses: string[] = [];
   const params: SqlValue[] = [];
+
+  if (options.userId) {
+    whereClauses.push("user_id = ?");
+    params.push(options.userId);
+  }
 
   if (search) {
     whereClauses.push("(LOWER(title) LIKE ? OR LOWER(content) LIKE ? OR LOWER(excerpt) LIKE ?)");
@@ -518,8 +537,8 @@ export async function createBlog(
   const result = await db.execute(
     `INSERT INTO blogs (
       title, excerpt, content, cover_image, date, reading_time,
-      featured, is_visible, quick_links, category_id, author_id
-    ) VALUES (?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, ?, ?, ?, ?, ?)`,
+      featured, is_visible, quick_links, category_id, author_id, user_id
+    ) VALUES (?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, ?, ?, ?, ?, ?, ?)`,
     [
       input.title.trim(),
       input.excerpt ? input.excerpt.trim() : "",
@@ -532,6 +551,7 @@ export async function createBlog(
       quickLinksJson,
       input.category_id,
       author.id,
+      input.user_id ?? null,
     ],
   );
 

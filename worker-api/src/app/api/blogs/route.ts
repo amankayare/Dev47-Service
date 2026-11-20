@@ -81,6 +81,7 @@ export async function POST(request: Request) {
       category_id: categoryId,
       author: authorObj as { id?: number; name: string },
       tags: Array.isArray(body.tags) ? (body.tags as Array<string | { id?: number; name?: string }>) : [],
+      user_id: auth.user.user_id,
     };
 
     const blog = await createBlog(db, input);

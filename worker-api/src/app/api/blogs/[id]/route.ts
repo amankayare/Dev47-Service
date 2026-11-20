@@ -31,6 +31,16 @@ export async function GET(request: Request, context: RouteContext) {
     return jsonResponse({ error: "Blog not found" }, 404, request);
   }
 
+  // Hidden/draft blogs can only be seen by the author or an admin
+  if (!blog.is_visible) {
+    const auth = authenticateRequest(request);
+    const isAdmin = auth.authenticated && Boolean(auth.user.is_admin || auth.user.role === "admin");
+    const isAuthor = auth.authenticated && blog.user_id === auth.user.user_id;
+    if (!isAdmin && !isAuthor) {
+      return jsonResponse({ error: "Blog not found" }, 404, request);
+    }
+  }
+
   return jsonResponse(blog, 200, request);
 }
 
@@ -50,6 +60,16 @@ export async function PUT(request: Request, context: RouteContext) {
   const existing = await getBlogById(db, blogId);
   if (!existing) {
     return jsonResponse({ error: "Blog not found" }, 404, request);
+  }
+
+  // Writers can only edit their own blogs
+  const isAdmin = Boolean(auth.user.is_admin || auth.user.role === "admin");
+  if (!isAdmin && existing.user_id !== auth.user.user_id) {
+    return jsonResponse(
+      { error: "Access denied. You can only edit your own blogs." },
+      403,
+      request,
+    );
   }
 
   let body: Record<string, unknown>;
@@ -112,7 +132,7 @@ export async function PUT(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(request: Request, context: RouteContext) {
-  const auth = authenticateRequest(request);
+  const auth = requireWriterOrAdmin(request);
   if (!auth.authenticated) {
     return auth.response;
   }
@@ -127,6 +147,16 @@ export async function DELETE(request: Request, context: RouteContext) {
   const existing = await getBlogById(db, blogId);
   if (!existing) {
     return jsonResponse({ error: "Blog not found" }, 404, request);
+  }
+
+  // Writers can only delete their own blogs
+  const isAdmin = Boolean(auth.user.is_admin || auth.user.role === "admin");
+  if (!isAdmin && existing.user_id !== auth.user.user_id) {
+    return jsonResponse(
+      { error: "Access denied. You can only delete your own blogs." },
+      403,
+      request,
+    );
   }
 
   try {
