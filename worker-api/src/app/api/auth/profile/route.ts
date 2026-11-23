@@ -1,4 +1,4 @@
-import { authenticateRequest } from "@/lib/auth/jwt";
+import { authenticateRequest, createJwtToken } from "@/lib/auth/jwt";
 import {
   findUserByEmail,
   findUserById,
@@ -33,7 +33,15 @@ export async function GET(request: Request): Promise<Response> {
       return jsonResponse({ error: "User not found" }, 404, request);
     }
 
-    return jsonResponse(formatUserDto(user), 200, request);
+    const userDto = formatUserDto(user);
+    const freshToken = createJwtToken(
+      user.username,
+      user.id,
+      Boolean(user.is_admin),
+      undefined,
+      typeof user.role === "string" ? user.role : undefined,
+    );
+    return jsonResponse({ ...userDto, token: freshToken }, 200, request);
   } catch (error) {
     console.error("Failed to fetch profile:", error);
     return jsonResponse({ error: "Failed to fetch profile" }, 500, request);

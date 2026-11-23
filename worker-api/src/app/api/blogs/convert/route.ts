@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/jwt";
+import { requireWriterOrAdmin } from "@/lib/auth/jwt";
 import { handleOptions, jsonResponse } from "@/lib/http";
 import {
   convertContentToHtml,
@@ -14,7 +14,7 @@ export async function OPTIONS(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = requireAdmin(request);
+  const auth = await requireWriterOrAdmin(request);
   if (!auth.authenticated) {
     return auth.response;
   }

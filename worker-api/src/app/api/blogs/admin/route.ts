@@ -10,7 +10,7 @@ export async function OPTIONS(request: Request) {
 }
 
 export async function GET(request: Request) {
-  const auth = requireWriterOrAdmin(request);
+  const auth = await requireWriterOrAdmin(request);
   if (!auth.authenticated) {
     return auth.response;
   }

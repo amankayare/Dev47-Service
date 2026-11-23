@@ -264,12 +264,13 @@ export function requireAdmin(
 }
 
 /**
- * Enforces writer or admin authorization from JWT claims.
+ * Enforces writer or admin authorization from JWT claims, with a database fallback
+ * to support immediate promotion without requiring re-login.
  */
-export function requireWriterOrAdmin(
+export async function requireWriterOrAdmin(
   request: Request,
   secretOverride?: string,
-): AuthResult {
+): Promise<AuthResult> {
   const auth = authenticateRequest(request, secretOverride);
   if (!auth.authenticated) {
     return auth;
@@ -282,16 +283,34 @@ export function requireWriterOrAdmin(
     auth.user.role === "admin"
   );
 
-  if (!isWriter) {
-    return {
-      authenticated: false,
-      response: jsonResponse(
-        { error: "writer_required", message: "Writer or Admin privileges required to write blogs" },
-        403,
-        request,
-      ),
-    };
+  if (isWriter) {
+    return auth;
   }
 
-  return auth;
+  // Fallback to database check in case token was minted before role was assigned
+  if (auth.user.user_id) {
+    try {
+      const { getDatabaseProvider } = await import("@/lib/database");
+      const { findUserById } = await import("@/lib/auth/user-repository");
+      const db = await getDatabaseProvider();
+      const user = await findUserById(db, auth.user.user_id);
+      if (user && (user.is_admin || user.role === "writer" || user.role === "admin")) {
+        auth.user.is_writer = true;
+        auth.user.role = typeof user.role === "string" ? user.role : (user.is_admin ? "admin" : "writer");
+        auth.user.is_admin = Boolean(user.is_admin);
+        return auth;
+      }
+    } catch {
+      // Fall through to 403
+    }
+  }
+
+  return {
+    authenticated: false,
+    response: jsonResponse(
+      { error: "writer_required", message: "Writer or Admin privileges required to write blogs" },
+      403,
+      request,
+    ),
+  };
 }

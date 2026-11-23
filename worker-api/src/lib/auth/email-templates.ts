@@ -4,7 +4,7 @@ export function buildWriterWelcomeEmailHtml(params: {
   editorUrl?: string;
 }): string {
   const frontendUrl = (params.frontendUrl || "https://amankayare.com").replace(/\/+$/, "");
-  const editorUrl = params.editorUrl || `${frontendUrl}/admin/blogs/new`;
+  const editorUrl = params.editorUrl || `${frontendUrl}/writer/blogs/new`;
   const loginUrl = `${frontendUrl}/login`;
 
   return `<!DOCTYPE html>

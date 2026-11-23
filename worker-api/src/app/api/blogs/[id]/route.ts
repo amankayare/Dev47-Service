@@ -45,7 +45,7 @@ export async function GET(request: Request, context: RouteContext) {
 }
 
 export async function PUT(request: Request, context: RouteContext) {
-  const auth = requireWriterOrAdmin(request);
+  const auth = await requireWriterOrAdmin(request);
   if (!auth.authenticated) {
     return auth.response;
   }
@@ -132,7 +132,7 @@ export async function PUT(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(request: Request, context: RouteContext) {
-  const auth = requireWriterOrAdmin(request);
+  const auth = await requireWriterOrAdmin(request);
   if (!auth.authenticated) {
     return auth.response;
   }
