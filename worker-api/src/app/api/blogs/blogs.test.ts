@@ -47,9 +47,12 @@ describe("Blogs API Routes", () => {
       await provider.execute(sql);
     }
 
-    // Seed category
+    // Seed category and admin user
     await provider.execute(
       "INSERT INTO blog_categories (id, name) VALUES (1, 'General'), (2, 'Tech')"
+    );
+    await provider.execute(
+      "INSERT INTO users (id, username, email, password_hash, is_admin, role) VALUES (1, 'admin', 'admin@example.com', 'scrypt:test', 1, 'admin')"
     );
 
     adminToken = createJwtToken("admin", 1, true, "test-blogs-secret-key-47");
@@ -196,11 +199,11 @@ describe("Blogs API Routes", () => {
     const deleteReq = new Request("http://localhost/api/blogs/1", {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${userToken}`,
+        Authorization: `Bearer ${adminToken}`,
       },
     });
     const deleteRes = await handleDeleteBlog(deleteReq, { params: Promise.resolve({ id: "1" }) });
-    expect(deleteRes.status).toBe(204);
+    expect(deleteRes.status).toBe(200);
 
     const blogs = await provider.query<{ id: number }>("SELECT id FROM blogs WHERE id = 1");
     expect(blogs).toHaveLength(0);

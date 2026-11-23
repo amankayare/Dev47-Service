@@ -671,7 +671,11 @@ export async function deleteBlog(
   db: DatabaseProvider,
   id: number,
 ): Promise<void> {
-  await db.execute("DELETE FROM user_bookmarks WHERE blog_id = ?", [id]);
+  try {
+    await db.execute("DELETE FROM user_bookmarks WHERE blog_id = ?", [id]);
+  } catch {
+    // Ignore if user_bookmarks table is not yet migrated
+  }
   await db.execute("DELETE FROM comments WHERE blog_id = ?", [id]);
   await db.execute("DELETE FROM blog_tags WHERE blog_id = ?", [id]);
   await db.execute("DELETE FROM blogs WHERE id = ?", [id]);

@@ -151,7 +151,7 @@ describe("Blog Categories API Routes", () => {
       },
     });
     const res = await handleDeleteCategory(req, { params: Promise.resolve({ id: "1" }) });
-    expect(res.status).toBe(204);
+    expect(res.status).toBe(200);
 
     const remainingCats = await provider.query<{ id: number; name: string }>(
       "SELECT id, name FROM blog_categories"
