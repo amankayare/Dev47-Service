@@ -58,12 +58,29 @@ export function jsonResponse(
   additionalHeaders: Record<string, string> = {},
 ): Response {
   const cors = getCorsHeaders(request);
+  const headers: Record<string, string> = {
+    ...cors,
+    ...additionalHeaders,
+  };
+
+  // OWASP ASVS Standard: Prevent caching of authenticated or private endpoints
+  const hasAuth = Boolean(request?.headers.get("authorization"));
+  const url = request?.url || "";
+  const isPrivateEndpoint =
+    hasAuth ||
+    url.includes("/api/auth/") ||
+    url.includes("/api/admin/") ||
+    url.includes("/api/user/") ||
+    url.includes("/api/blogs/admin");
+
+  if (isPrivateEndpoint && !headers["Cache-Control"]) {
+    headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private";
+    headers["Pragma"] = "no-cache";
+  }
+
   return Response.json(data, {
     status,
-    headers: {
-      ...cors,
-      ...additionalHeaders,
-    },
+    headers,
   });
 }
 
