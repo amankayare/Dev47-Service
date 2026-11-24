@@ -15,6 +15,7 @@
     "POLYGLOT_URL": "https://polyglot.amankayare.com",
     "FRONTEND_ORIGIN": "https://amankayare.com",
     "FRONTEND_URL": "https://amankayare.com",
+    "CORS_ORIGINS": "https://dev47.amankayare.com,https://amankayare.com",
     "GEMINI_MODEL": "gemini-2.0-flash"
   },
   "assets": {

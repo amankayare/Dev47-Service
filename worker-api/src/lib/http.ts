@@ -10,6 +10,7 @@ export function getAllowedOrigins(): string[] {
   origins.add("http://127.0.0.1:5000");
   origins.add("https://amankayare.com");
   origins.add("https://www.amankayare.com");
+  origins.add("https://dev47.amankayare.com");
   origins.add("https://dev47-ui.pages.dev");
 
   if (frontendOrigin) origins.add(frontendOrigin.trim().replace(/\/+$/, ""));
