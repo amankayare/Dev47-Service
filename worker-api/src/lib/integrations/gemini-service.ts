@@ -84,7 +84,10 @@ CRITICAL FOR QUICK LINKS AND HEADINGS:
 * You MUST give that <h2> or <section> the exact matching id attribute!
   Example: If a quick link has url: "#practical-steps-today", then the heading in html_content MUST be:
   <h2 id="practical-steps-today">Practical Steps for Teams Today</h2>
-* CRITICAL COMPLETION ORDER: You MUST pace generation so that every section listed in suggested_quick_links is fully written from first to last. NEVER truncate, omit, or leave the last section unfinished!
+* CRITICAL COMPLETION ORDER & PACING:
+  - You MUST pace generation so that every section listed in suggested_quick_links is fully written from first to last.
+  - NEVER list a section in suggested_quick_links that is omitted, truncated, or left unfinished in html_content!
+  - Prioritize completing all listed sections and closing all tags before reaching token limits.
 
 html_content:
 
@@ -456,6 +459,177 @@ function parseAiJsonOutput(raw: string): Record<string, unknown> {
   );
 }
 
+/**
+ * Ensures all opened HTML tags in a potentially truncated HTML string are closed.
+ */
+export function ensureClosedHtmlTags(html: string): string {
+  if (!html || typeof html !== "string") return html;
+
+  let cleaned = html;
+  // If html ends with an unclosed open bracket (e.g. `<section class="...` cut off before `>`), strip it
+  const lastOpen = cleaned.lastIndexOf("<");
+  const lastClose = cleaned.lastIndexOf(">");
+  if (lastOpen > lastClose) {
+    cleaned = cleaned.substring(0, lastOpen).trimEnd();
+  }
+
+  const voidTags = new Set([
+    "area", "base", "br", "col", "embed", "hr", "img", "input",
+    "link", "meta", "param", "source", "track", "wbr"
+  ]);
+
+  const tagRegex = /<\/?([a-zA-Z0-9]+)(?:\s+[^>]*?)?(\/?)>/g;
+  const openTags: string[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = tagRegex.exec(cleaned)) !== null) {
+    const fullTag = match[0];
+    const tagName = match[1].toLowerCase();
+    const isSelfClosing = match[2] === "/" || voidTags.has(tagName);
+    const isClosingTag = fullTag.startsWith("</");
+
+    if (isSelfClosing) {
+      continue;
+    }
+
+    if (isClosingTag) {
+      const lastIndex = openTags.lastIndexOf(tagName);
+      if (lastIndex !== -1) {
+        openTags.splice(lastIndex, 1);
+      }
+    } else {
+      openTags.push(tagName);
+    }
+  }
+
+  if (openTags.length > 0) {
+    let closingTags = "";
+    while (openTags.length > 0) {
+      const tag = openTags.pop();
+      closingTags += `</${tag}>`;
+    }
+    return cleaned + closingTags;
+  }
+
+  return cleaned;
+}
+
+/**
+ * Cross-references quick links against actual headings in the generated HTML.
+ * Prunes phantom links for sections not found in the HTML body and ensures existing headings have anchor IDs.
+ */
+export function synchronizeQuickLinksAndHeadings(
+  quickLinks: Array<{ title: string; url: string }>,
+  htmlContent: string
+): {
+  syncedLinks: Array<{ title: string; url: string }>;
+  syncedHtml: string;
+} {
+  if (!htmlContent) {
+    return { syncedLinks: [], syncedHtml: htmlContent };
+  }
+
+  let updatedHtml = htmlContent;
+  const verifiedLinks: Array<{ title: string; url: string }> = [];
+
+  const headingRegex = /<(h[1-6])([^>]*)>([\s\S]*?)<\/\1>/gi;
+  const foundHeadings: Array<{
+    fullTag: string;
+    level: string;
+    attrs: string;
+    id: string | null;
+    rawText: string;
+    cleanText: string;
+  }> = [];
+
+  let match: RegExpExecArray | null;
+  while ((match = headingRegex.exec(htmlContent)) !== null) {
+    const fullTag = match[0];
+    const level = match[1];
+    const attrs = match[2];
+    const rawText = match[3];
+    const cleanText = rawText.replace(/<[^>]*>/g, "").trim().toLowerCase();
+
+    const idMatch = attrs.match(/\bid\s*=\s*["']([^"']+)["']/i);
+    const id = idMatch ? idMatch[1].trim().toLowerCase() : null;
+
+    foundHeadings.push({
+      fullTag,
+      level,
+      attrs,
+      id,
+      rawText,
+      cleanText,
+    });
+  }
+
+  for (const link of quickLinks) {
+    if (!link || typeof link.title !== "string") continue;
+
+    const rawTarget = (link.url || "").includes("#")
+      ? (link.url || "").split("#")[1]
+      : (link.url || "");
+    const targetId = decodeURIComponent(rawTarget).trim().toLowerCase();
+    const cleanTitle = link.title.toLowerCase().trim();
+    const titleWords = cleanTitle.split(/[^a-z0-9]+/).filter((w) => w.length > 2);
+
+    // 1. Direct ID match in HTML
+    if (targetId && (foundHeadings.some((h) => h.id === targetId) || new RegExp(`\\bid=["']${targetId}["']`, "i").test(updatedHtml))) {
+      verifiedLinks.push(link);
+      continue;
+    }
+
+    // 2. Heading text match or keyword overlap
+    const matchedHeading = foundHeadings.find((h) => {
+      if (!h.cleanText) return false;
+      if (h.cleanText.includes(cleanTitle) || cleanTitle.includes(h.cleanText)) return true;
+      if (titleWords.length > 0) {
+        const matchingWords = titleWords.filter((w) => h.cleanText.includes(w));
+        return matchingWords.length >= Math.min(2, titleWords.length);
+      }
+      return false;
+    });
+
+    if (matchedHeading) {
+      const effectiveId = matchedHeading.id || targetId || cleanTitle.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      if (!matchedHeading.id && effectiveId) {
+        const newHeadingTag = `<${matchedHeading.level}${matchedHeading.attrs} id="${effectiveId}">${matchedHeading.rawText}</${matchedHeading.level}>`;
+        updatedHtml = updatedHtml.replace(matchedHeading.fullTag, newHeadingTag);
+        matchedHeading.id = effectiveId;
+      }
+      verifiedLinks.push({
+        title: link.title,
+        url: `#${matchedHeading.id || effectiveId}`,
+      });
+    } else {
+      console.warn(`[gemini] Pruning phantom quick link "${link.title}" (${link.url}) - section not present in generated HTML.`);
+    }
+  }
+
+  // If suggested quick links were pruned or missing, auto-populate from existing <h2> tags
+  if (verifiedLinks.length === 0 && foundHeadings.length > 0) {
+    const h2s = foundHeadings.filter((h) => h.level.toLowerCase() === "h2");
+    for (const h2 of h2s.slice(0, 5)) {
+      const cleanName = h2.cleanText.replace(/\b\w/g, (c) => c.toUpperCase());
+      const id = h2.id || h2.cleanText.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      if (!h2.id && id) {
+        const newHeadingTag = `<${h2.level}${h2.attrs} id="${id}">${h2.rawText}</${h2.level}>`;
+        updatedHtml = updatedHtml.replace(h2.fullTag, newHeadingTag);
+        h2.id = id;
+      }
+      verifiedLinks.push({
+        title: h2.rawText.replace(/<[^>]*>/g, "").trim(),
+        url: `#${id}`,
+      });
+    }
+  }
+
+  return {
+    syncedLinks: verifiedLinks,
+    syncedHtml: updatedHtml,
+  };
+}
+
 export async function convertContentToHtml(
   rawText: string,
   customSystemPrompt?: string | null,
@@ -639,10 +813,16 @@ export async function convertContentToHtml(
       content?: {
         parts?: Array<{ text?: string }>;
       };
+      finishReason?: string;
     }>;
   };
 
   const candidate = responseData.candidates?.[0];
+  const finishReason = candidate?.finishReason;
+  if (finishReason === "MAX_TOKENS") {
+    console.warn("[gemini] Warning: Generation reached MAX_TOKENS and was truncated. Balancing HTML tags and syncing quick links.");
+  }
+
   const parts = candidate?.content?.parts ?? [];
   const rawTextOutput = parts.map((p) => p.text ?? "").join("");
 
@@ -652,16 +832,24 @@ export async function convertContentToHtml(
     throw new AiParseError("AI response missing required field: html_content");
   }
 
+  // 1. Ensure all open HTML tags are closed in case of truncation
+  const closedHtml = ensureClosedHtmlTags(parsed.html_content);
+
+  // 2. Synchronize quick links against actual headings in the HTML
+  const rawQuickLinks = Array.isArray(parsed.suggested_quick_links)
+    ? (parsed.suggested_quick_links as Array<{ title: string; url: string }>)
+    : Array.isArray(parsed.quick_links)
+      ? (parsed.quick_links as Array<{ title: string; url: string }>)
+      : [];
+
+  const { syncedLinks, syncedHtml } = synchronizeQuickLinksAndHeadings(rawQuickLinks, closedHtml);
+
   return {
-    html_content: parsed.html_content,
+    html_content: syncedHtml,
     suggested_title: typeof parsed.suggested_title === "string" ? parsed.suggested_title : "",
     suggested_excerpt: typeof parsed.suggested_excerpt === "string" ? parsed.suggested_excerpt : "",
     reading_time_minutes: Number(parsed.reading_time_minutes ?? 0),
-    suggested_quick_links: Array.isArray(parsed.suggested_quick_links)
-      ? (parsed.suggested_quick_links as Array<{ title: string; url: string }>)
-      : Array.isArray(parsed.quick_links)
-        ? (parsed.quick_links as Array<{ title: string; url: string }>)
-        : [],
+    suggested_quick_links: syncedLinks,
     suggested_tags: Array.isArray(parsed.suggested_tags)
       ? (parsed.suggested_tags as string[])
       : Array.isArray(parsed.tags)
