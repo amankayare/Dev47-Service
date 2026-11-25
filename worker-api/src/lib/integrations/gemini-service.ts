@@ -254,13 +254,25 @@ FLOW DIAGRAM RULES
 
 At most ONE section may contain a concise SVG/CSS animated architecture diagram.
 
-Requirements:
+CRITICAL SVG GEOMETRY & LAYOUT RULES (PREVENTS TEXT & NODE OVERLAPPING):
 
-* pure SVG and CSS only (compact, lightweight paths)
-* no JavaScript
-* architecture-focused
-* visually understandable
-* keep SVG markup concise so that all subsequent sections and the final conclusion fit within the token ceiling
+* Canvas & Viewport:
+  - Always use a wide, spacious viewBox: viewBox="0 0 800 240" (with width="100%" height="auto" and style="max-width: 800px; display: block; margin: 0 auto;").
+
+* Timeline & Node Spacing:
+  - NEVER place text labels horizontally next to nodes on the same line (this causes text and circles to collide).
+  - Always position text labels VERTICALLY ABOVE or BELOW the nodes:
+    * Above node: y = cy - 20 with text-anchor="middle"
+    * Below node: y = cy + 26 with text-anchor="middle"
+  - Maintain a minimum horizontal spacing of 160px to 200px between consecutive event nodes on any timeline.
+  - Keep label text concise (under 18 characters, e.g. "Send Msg (LC: 2)").
+
+* Architecture & Card Layouts:
+  - For service/system flows, prefer structured box cards: <rect rx="8" ...> with centered text (<text text-anchor="middle" dominant-baseline="middle">) and connected arrows.
+  - pure SVG and CSS only (compact, lightweight paths)
+  - no JavaScript
+  - architecture-focused and visually polished
+  - keep SVG markup concise so that all subsequent sections and conclusion fit comfortably within token limits
 
 ==================================================
 COMPONENT USAGE RULES
